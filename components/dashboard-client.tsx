@@ -61,7 +61,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center p-4">
         <div className="text-center">
           <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
           <p className="text-muted-foreground">Loading dashboard...</p>
@@ -85,112 +85,123 @@ export function DashboardClient({ user }: DashboardClientProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-balance mb-2">Welcome back, {user.name}!</h1>
-          <p className="text-muted-foreground text-balance">Your complete overview of job applications and finances</p>
+      <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl">
+        {/* Header */}
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">
+            Welcome back, {user.name}!
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Your complete overview of job applications and finances
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Briefcase className="h-4 w-4 text-blue-600" />
-                Total Applications
+            <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
+                <Briefcase className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
+                <span className="hidden xs:inline">Total Applications</span>
+                <span className="xs:hidden">Applications</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-blue-600">{stats.totalApplications}</div>
-              <p className="text-xs text-muted-foreground mt-1">{stats.activeApplications} active</p>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-blue-600">{stats.totalApplications}</div>
+              <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">{stats.activeApplications} active</p>
             </CardContent>
           </Card>
 
           <Card className="border-green-200 bg-gradient-to-br from-green-50 to-white">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-green-600" />
-                Monthly Income
+            <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+                <span className="hidden xs:inline">Monthly Income</span>
+                <span className="xs:hidden">Income</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-600">${stats.monthlyIncome.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground mt-1">This month</p>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-green-600">${stats.monthlyIncome.toFixed(2)}</div>
+              <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">This month</p>
             </CardContent>
           </Card>
 
           <Card className="border-red-200 bg-gradient-to-br from-red-50 to-white">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-red-600" />
-                Monthly Expenses
+            <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
+                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
+                <span className="hidden xs:inline">Monthly Expenses</span>
+                <span className="xs:hidden">Expenses</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-red-600">${stats.monthlyExpenses.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground mt-1">This month</p>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-red-600">${stats.monthlyExpenses.toFixed(2)}</div>
+              <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">This month</p>
             </CardContent>
           </Card>
 
           <Card
             className={`border-purple-200 bg-gradient-to-br ${stats.balance >= 0 ? "from-purple-50" : "from-amber-50"} to-white`}
           >
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <RefreshCw className="h-4 w-4 text-purple-600" />
+            <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
+                <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
                 Balance
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className={`text-3xl font-bold ${stats.balance >= 0 ? "text-purple-600" : "text-amber-600"}`}>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <div className={`text-2xl sm:text-3xl font-bold ${stats.balance >= 0 ? "text-purple-600" : "text-amber-600"}`}>
                 ${stats.balance.toFixed(2)}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Net this month</p>
+              <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">Net this month</p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        {/* Quick Links */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
           <Link href="/jobs" className="block">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="flex items-center justify-between text-base sm:text-lg">
                   <span className="flex items-center gap-2">
-                    <Briefcase className="h-5 w-5 text-blue-600" />
-                    Job Applications
+                    <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" />
+                    <span>Job Applications</span>
                   </span>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">Track and manage your job search journey</p>
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">Track and manage your job search journey</p>
               </CardContent>
             </Card>
           </Link>
 
           <Link href="/finance" className="block">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="flex items-center justify-between text-base sm:text-lg">
                   <span className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-green-600" />
-                    Finance Tracker
+                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
+                    <span>Finance Tracker</span>
                   </span>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">Monitor your income and expenses</p>
+              <CardContent className="p-4 sm:p-6 pt-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">Monitor your income and expenses</p>
               </CardContent>
             </Card>
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
           <JobStatusChart applications={applications} />
           <ApplicationTimelineChart applications={applications} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
           <ExpenseCategoryChart expenses={expenses} />
           <IncomeVsExpensesChart income={income} expenses={expenses} />
         </div>
