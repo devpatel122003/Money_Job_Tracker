@@ -1,206 +1,270 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, Search, Filter } from "lucide-react"
-import { JobApplicationForm } from "@/components/job-application-form"
-import { ApplicationCard } from "@/components/application-card"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
-export default function JobsPage() {
-  const [applications, setApplications] = useState<any[]>([])
-  const [filteredApplications, setFilteredApplications] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
-  const [editingApplication, setEditingApplication] = useState<any>(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
+interface JobApplicationFormProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSuccess: () => void
+  initialData?: any
+}
 
-  const fetchApplications = async () => {
+export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData }: JobApplicationFormProps) {
+  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    companyName: "",
+    positionTitle: "",
+    jobUrl: "",
+    location: "",
+    salaryRange: "",
+    applicationStatus: "applied",
+    applicationDate: new Date().toISOString().split("T")[0],
+    notes: "",
+    contactName: "",
+    contactEmail: "",
+    followUpDate: "",
+  })
+
+  // Update form data when initialData changes (for editing)
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        companyName: initialData.company_name || "",
+        positionTitle: initialData.position_title || "",
+        jobUrl: initialData.job_url || "",
+        location: initialData.location || "",
+        salaryRange: initialData.salary_range || "",
+        applicationStatus: initialData.application_status || "applied",
+        applicationDate: initialData.application_date || new Date().toISOString().split("T")[0],
+        notes: initialData.notes || "",
+        contactName: initialData.contact_name || "",
+        contactEmail: initialData.contact_email || "",
+        followUpDate: initialData.follow_up_date || "",
+      })
+    } else {
+      // Reset form when not editing
+      setFormData({
+        companyName: "",
+        positionTitle: "",
+        jobUrl: "",
+        location: "",
+        salaryRange: "",
+        applicationStatus: "applied",
+        applicationDate: new Date().toISOString().split("T")[0],
+        notes: "",
+        contactName: "",
+        contactEmail: "",
+        followUpDate: "",
+      })
+    }
+  }, [initialData, open])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
     try {
-      const response = await fetch("/api/applications")
-      const data = await response.json()
-      if (Array.isArray(data)) {
-        setApplications(data)
-        setFilteredApplications(data)
-      } else {
-        console.error("[v0] Applications data is not an array:", data)
-        setApplications([])
-        setFilteredApplications([])
+      const url = initialData ? `/api/applications/${initialData.id}` : "/api/applications"
+      const method = initialData ? "PATCH" : "POST"
+
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+
+      if (response.ok) {
+        onSuccess()
+        onOpenChange(false)
+        setFormData({
+          companyName: "",
+          positionTitle: "",
+          jobUrl: "",
+          location: "",
+          salaryRange: "",
+          applicationStatus: "applied",
+          applicationDate: new Date().toISOString().split("T")[0],
+          notes: "",
+          contactName: "",
+          contactEmail: "",
+          followUpDate: "",
+        })
       }
     } catch (error) {
-      console.error("[v0] Error fetching applications:", error)
-      setApplications([])
-      setFilteredApplications([])
+      console.error("[v0] Error submitting application:", error)
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => {
-    fetchApplications()
-  }, [])
-
-  useEffect(() => {
-    let filtered = applications
-
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (app) =>
-          app.company_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          app.position_title.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
-    }
-
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((app) => app.application_status === statusFilter)
-    }
-
-    setFilteredApplications(filtered)
-  }, [searchQuery, statusFilter, applications])
-
-  const handleEdit = (application: any) => {
-    setEditingApplication(application)
-    setShowForm(true)
-  }
-
-  const handleDelete = (id: number) => {
-    setApplications(applications.filter((app) => app.id !== id))
-  }
-
-  const handleFormClose = () => {
-    setShowForm(false)
-    setEditingApplication(null)
-  }
-
-  const stats = {
-    total: applications.length,
-    applied: applications.filter((a) => a.application_status === "applied").length,
-    interview: applications.filter(
-      (a) => a.application_status === "interview" || a.application_status === "phone_screen",
-    ).length,
-    offers: applications.filter((a) => a.application_status === "offer").length,
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen p-4">
-        <div className="text-base sm:text-lg text-muted-foreground">Loading applications...</div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl">
-        {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">Job Applications</h1>
-          <p className="text-sm sm:text-base text-muted-foreground">Track and manage your job search journey</p>
-        </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
+        <DialogHeader>
+          <DialogTitle className="text-lg sm:text-xl">{initialData ? "Edit Application" : "Add Job Application"}</DialogTitle>
+          <DialogDescription className="text-sm sm:text-base">
+            {initialData ? "Update your job application details" : "Track a new job application"}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="companyName" className="text-sm">Company Name *</Label>
+              <Input
+                id="companyName"
+                required
+                value={formData.companyName}
+                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                className="text-sm sm:text-base"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="positionTitle" className="text-sm">Position Title *</Label>
+              <Input
+                id="positionTitle"
+                required
+                value={formData.positionTitle}
+                onChange={(e) => setFormData({ ...formData, positionTitle: e.target.value })}
+                className="text-sm sm:text-base"
+              />
+            </div>
+          </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <div className="bg-white rounded-lg p-3 sm:p-4 border shadow-sm">
-            <div className="text-xl sm:text-2xl font-bold text-blue-600">{stats.total}</div>
-            <div className="text-xs sm:text-sm text-muted-foreground">Total Applications</div>
-          </div>
-          <div className="bg-white rounded-lg p-3 sm:p-4 border shadow-sm">
-            <div className="text-xl sm:text-2xl font-bold text-purple-600">{stats.applied}</div>
-            <div className="text-xs sm:text-sm text-muted-foreground">Applied</div>
-          </div>
-          <div className="bg-white rounded-lg p-3 sm:p-4 border shadow-sm">
-            <div className="text-xl sm:text-2xl font-bold text-amber-600">{stats.interview}</div>
-            <div className="text-xs sm:text-sm text-muted-foreground">In Progress</div>
-          </div>
-          <div className="bg-white rounded-lg p-3 sm:p-4 border shadow-sm">
-            <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.offers}</div>
-            <div className="text-xs sm:text-sm text-muted-foreground">Offers</div>
-          </div>
-        </div>
-
-        {/* Search and Filter Section */}
-        <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
-          {/* Search Bar */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="space-y-2">
+            <Label htmlFor="jobUrl" className="text-sm">Job URL</Label>
             <Input
-              placeholder="Search by company or position..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white text-sm sm:text-base"
+              id="jobUrl"
+              type="url"
+              placeholder="https://..."
+              value={formData.jobUrl}
+              onChange={(e) => setFormData({ ...formData, jobUrl: e.target.value })}
+              className="text-sm sm:text-base"
             />
           </div>
 
-          {/* Filter and Add Button Row */}
-          <div className="flex flex-col xs:flex-row gap-3">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full xs:w-[180px] bg-white text-sm sm:text-base">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="saved">Saved</SelectItem>
-                <SelectItem value="applied">Applied</SelectItem>
-                <SelectItem value="phone_screen">Phone Screen</SelectItem>
-                <SelectItem value="interview">Interview</SelectItem>
-                <SelectItem value="offer">Offer</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-                <SelectItem value="accepted">Accepted</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              onClick={() => setShowForm(true)}
-              className="bg-blue-600 hover:bg-blue-700 w-full xs:w-auto text-sm sm:text-base"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              <span className="hidden xs:inline">Add Application</span>
-              <span className="xs:hidden">Add</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="location" className="text-sm">Location</Label>
+              <Input
+                id="location"
+                placeholder="City, State or Remote"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                className="text-sm sm:text-base"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="salaryRange" className="text-sm">Salary Range</Label>
+              <Input
+                id="salaryRange"
+                placeholder="$XX,XXX - $XX,XXX"
+                value={formData.salaryRange}
+                onChange={(e) => setFormData({ ...formData, salaryRange: e.target.value })}
+                className="text-sm sm:text-base"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="applicationStatus" className="text-sm">Status</Label>
+              <Select
+                value={formData.applicationStatus}
+                onValueChange={(value) => setFormData({ ...formData, applicationStatus: value })}
+              >
+                <SelectTrigger className="text-sm sm:text-base">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="saved">Saved</SelectItem>
+                  <SelectItem value="applied">Applied</SelectItem>
+                  <SelectItem value="phone_screen">Phone Screen</SelectItem>
+                  <SelectItem value="interview">Interview</SelectItem>
+                  <SelectItem value="offer">Offer</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="accepted">Accepted</SelectItem>
+                  <SelectItem value="withdrawn">Withdrawn</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="applicationDate" className="text-sm">Application Date *</Label>
+              <Input
+                id="applicationDate"
+                type="date"
+                required
+                value={formData.applicationDate}
+                onChange={(e) => setFormData({ ...formData, applicationDate: e.target.value })}
+                className="text-sm sm:text-base"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="contactName" className="text-sm">Contact Name</Label>
+              <Input
+                id="contactName"
+                placeholder="Recruiter or hiring manager"
+                value={formData.contactName}
+                onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
+                className="text-sm sm:text-base"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contactEmail" className="text-sm">Contact Email</Label>
+              <Input
+                id="contactEmail"
+                type="email"
+                placeholder="contact@company.com"
+                value={formData.contactEmail}
+                onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                className="text-sm sm:text-base"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="followUpDate" className="text-sm">Follow-up Date</Label>
+            <Input
+              id="followUpDate"
+              type="date"
+              value={formData.followUpDate}
+              onChange={(e) => setFormData({ ...formData, followUpDate: e.target.value })}
+              className="text-sm sm:text-base"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes" className="text-sm">Notes</Label>
+            <Textarea
+              id="notes"
+              rows={3}
+              placeholder="Add any additional notes about this application..."
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              className="text-sm sm:text-base"
+            />
+          </div>
+
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+              {loading ? "Saving..." : initialData ? "Update" : "Add Application"}
             </Button>
           </div>
-        </div>
-
-        {/* Applications Grid / Empty State */}
-        {filteredApplications.length === 0 ? (
-          <div className="text-center py-8 sm:py-12 bg-white rounded-lg border">
-            <p className="text-sm sm:text-base text-muted-foreground mb-4">
-              {searchQuery || statusFilter !== "all"
-                ? "No applications match your filters"
-                : "No applications yet. Start tracking your job search!"}
-            </p>
-            {!searchQuery && statusFilter === "all" && (
-              <Button onClick={() => setShowForm(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your First Application
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-            {filteredApplications.map((application) => (
-              <ApplicationCard
-                key={application.id}
-                application={application}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Form Dialog */}
-        <JobApplicationForm
-          open={showForm}
-          onOpenChange={handleFormClose}
-          onSuccess={() => {
-            fetchApplications()
-            handleFormClose()
-          }}
-          initialData={editingApplication}
-        />
-      </div>
-    </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,18 +20,52 @@ interface JobApplicationFormProps {
 export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData }: JobApplicationFormProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
-    companyName: initialData?.company_name || "",
-    positionTitle: initialData?.position_title || "",
-    jobUrl: initialData?.job_url || "",
-    location: initialData?.location || "",
-    salaryRange: initialData?.salary_range || "",
-    applicationStatus: initialData?.application_status || "applied",
-    applicationDate: initialData?.application_date || new Date().toISOString().split("T")[0],
-    notes: initialData?.notes || "",
-    contactName: initialData?.contact_name || "",
-    contactEmail: initialData?.contact_email || "",
-    followUpDate: initialData?.follow_up_date || "",
+    companyName: "",
+    positionTitle: "",
+    jobUrl: "",
+    location: "",
+    salaryRange: "",
+    applicationStatus: "applied",
+    applicationDate: new Date().toISOString().split("T")[0],
+    notes: "",
+    contactName: "",
+    contactEmail: "",
+    followUpDate: "",
   })
+
+  // Update form data when initialData changes (for editing)
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        companyName: initialData.company_name || "",
+        positionTitle: initialData.position_title || "",
+        jobUrl: initialData.job_url || "",
+        location: initialData.location || "",
+        salaryRange: initialData.salary_range || "",
+        applicationStatus: initialData.application_status || "applied",
+        applicationDate: initialData.application_date || new Date().toISOString().split("T")[0],
+        notes: initialData.notes || "",
+        contactName: initialData.contact_name || "",
+        contactEmail: initialData.contact_email || "",
+        followUpDate: initialData.follow_up_date || "",
+      })
+    } else {
+      // Reset form when not editing
+      setFormData({
+        companyName: "",
+        positionTitle: "",
+        jobUrl: "",
+        location: "",
+        salaryRange: "",
+        applicationStatus: "applied",
+        applicationDate: new Date().toISOString().split("T")[0],
+        notes: "",
+        contactName: "",
+        contactEmail: "",
+        followUpDate: "",
+      })
+    }
+  }, [initialData, open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,75 +107,80 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
-          <DialogTitle>{initialData ? "Edit Application" : "Add Job Application"}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-lg sm:text-xl">{initialData ? "Edit Application" : "Add Job Application"}</DialogTitle>
+          <DialogDescription className="text-sm sm:text-base">
             {initialData ? "Update your job application details" : "Track a new job application"}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="companyName">Company Name *</Label>
+              <Label htmlFor="companyName" className="text-sm">Company Name *</Label>
               <Input
                 id="companyName"
                 required
                 value={formData.companyName}
                 onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                className="text-sm sm:text-base"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="positionTitle">Position Title *</Label>
+              <Label htmlFor="positionTitle" className="text-sm">Position Title *</Label>
               <Input
                 id="positionTitle"
                 required
                 value={formData.positionTitle}
                 onChange={(e) => setFormData({ ...formData, positionTitle: e.target.value })}
+                className="text-sm sm:text-base"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="jobUrl">Job URL</Label>
+            <Label htmlFor="jobUrl" className="text-sm">Job URL</Label>
             <Input
               id="jobUrl"
               type="url"
               placeholder="https://..."
               value={formData.jobUrl}
               onChange={(e) => setFormData({ ...formData, jobUrl: e.target.value })}
+              className="text-sm sm:text-base"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location" className="text-sm">Location</Label>
               <Input
                 id="location"
                 placeholder="City, State or Remote"
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                className="text-sm sm:text-base"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="salaryRange">Salary Range</Label>
+              <Label htmlFor="salaryRange" className="text-sm">Salary Range</Label>
               <Input
                 id="salaryRange"
                 placeholder="$XX,XXX - $XX,XXX"
                 value={formData.salaryRange}
                 onChange={(e) => setFormData({ ...formData, salaryRange: e.target.value })}
+                className="text-sm sm:text-base"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="applicationStatus">Status</Label>
+              <Label htmlFor="applicationStatus" className="text-sm">Status</Label>
               <Select
                 value={formData.applicationStatus}
                 onValueChange={(value) => setFormData({ ...formData, applicationStatus: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="text-sm sm:text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -157,65 +196,70 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="applicationDate">Application Date *</Label>
+              <Label htmlFor="applicationDate" className="text-sm">Application Date *</Label>
               <Input
                 id="applicationDate"
                 type="date"
                 required
                 value={formData.applicationDate}
                 onChange={(e) => setFormData({ ...formData, applicationDate: e.target.value })}
+                className="text-sm sm:text-base"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="contactName">Contact Name</Label>
+              <Label htmlFor="contactName" className="text-sm">Contact Name</Label>
               <Input
                 id="contactName"
                 placeholder="Recruiter or hiring manager"
                 value={formData.contactName}
                 onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
+                className="text-sm sm:text-base"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="contactEmail">Contact Email</Label>
+              <Label htmlFor="contactEmail" className="text-sm">Contact Email</Label>
               <Input
                 id="contactEmail"
                 type="email"
                 placeholder="contact@company.com"
                 value={formData.contactEmail}
                 onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                className="text-sm sm:text-base"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="followUpDate">Follow-up Date</Label>
+            <Label htmlFor="followUpDate" className="text-sm">Follow-up Date</Label>
             <Input
               id="followUpDate"
               type="date"
               value={formData.followUpDate}
               onChange={(e) => setFormData({ ...formData, followUpDate: e.target.value })}
+              className="text-sm sm:text-base"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes" className="text-sm">Notes</Label>
             <Textarea
               id="notes"
               rows={3}
               placeholder="Add any additional notes about this application..."
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              className="text-sm sm:text-base"
             />
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? "Saving..." : initialData ? "Update" : "Add Application"}
             </Button>
           </div>
