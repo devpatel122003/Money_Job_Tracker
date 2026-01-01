@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { capitalizeText } from "@/lib/utils"
 
 interface SavingsGoalFormProps {
   open: boolean
@@ -69,7 +70,7 @@ export function SavingsGoalForm({ open, onOpenChange, onSuccess }: SavingsGoalFo
             <Input
               id="goalName"
               value={goalName}
-              onChange={(e) => setGoalName(e.target.value)}
+              onChange={(e) => setGoalName(capitalizeText(e.target.value))}
               placeholder="e.g., Emergency Fund, Vacation, New Laptop"
               required
             />
@@ -117,7 +118,7 @@ export function SavingsGoalForm({ open, onOpenChange, onSuccess }: SavingsGoalFo
             <Textarea
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => setDescription(capitalizeText(e.target.value))}
               placeholder="Why are you saving for this goal?"
               rows={3}
             />

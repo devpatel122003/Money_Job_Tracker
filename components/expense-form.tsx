@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
+import { capitalizeText } from "@/lib/utils"
 
 interface ExpenseFormProps {
   open: boolean
@@ -119,7 +120,7 @@ export function ExpenseForm({ open, onOpenChange, onSuccess }: ExpenseFormProps)
               id="merchant"
               placeholder="e.g., Starbucks, Amazon"
               value={formData.merchant}
-              onChange={(e) => setFormData({ ...formData, merchant: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, merchant: capitalizeText(e.target.value) })}
             />
           </div>
 
@@ -130,7 +131,7 @@ export function ExpenseForm({ open, onOpenChange, onSuccess }: ExpenseFormProps)
               rows={2}
               placeholder="Add any notes..."
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, description: capitalizeText(e.target.value) })}
             />
           </div>
 

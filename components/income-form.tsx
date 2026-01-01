@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
+import { capitalizeText } from "@/lib/utils"
 
 interface IncomeFormProps {
   open: boolean
@@ -81,7 +82,7 @@ export function IncomeForm({ open, onOpenChange, onSuccess }: IncomeFormProps) {
               required
               placeholder="e.g., Part-time job, Scholarship"
               value={formData.source}
-              onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, source: capitalizeText(e.target.value) })}
             />
           </div>
 
@@ -169,7 +170,7 @@ export function IncomeForm({ open, onOpenChange, onSuccess }: IncomeFormProps) {
               rows={2}
               placeholder="Add any notes..."
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, description: capitalizeText(e.target.value) })}
             />
           </div>
 

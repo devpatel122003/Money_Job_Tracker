@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { capitalizeText } from "@/lib/utils"
 
 interface JobApplicationFormProps {
   open: boolean
@@ -107,14 +108,14 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[95vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-lg sm:text-xl">{initialData ? "Edit Application" : "Add Job Application"}</DialogTitle>
           <DialogDescription className="text-sm">
             {initialData ? "Update your job application details" : "Track a new job application"}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3 overflow-y-auto flex-1 pr-1">
+        <form onSubmit={handleSubmit} className="space-y-3 overflow-y-auto flex-1 pr-2">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="companyName" className="text-sm">Company *</Label>
@@ -122,7 +123,7 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
                 id="companyName"
                 required
                 value={formData.companyName}
-                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, companyName: capitalizeText(e.target.value) })}
                 className="text-sm h-9"
               />
             </div>
@@ -132,7 +133,7 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
                 id="positionTitle"
                 required
                 value={formData.positionTitle}
-                onChange={(e) => setFormData({ ...formData, positionTitle: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, positionTitle: capitalizeText(e.target.value) })}
                 className="text-sm h-9"
               />
             </div>
@@ -157,7 +158,7 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
                 id="location"
                 placeholder="City, State or Remote"
                 value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, location: capitalizeText(e.target.value) })}
                 className="text-sm h-9"
               />
             </div>
@@ -215,7 +216,7 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
                 id="contactName"
                 placeholder="Recruiter or hiring manager"
                 value={formData.contactName}
-                onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, contactName: capitalizeText(e.target.value) })}
                 className="text-sm h-9"
               />
             </div>
@@ -250,12 +251,12 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
               rows={2}
               placeholder="Additional notes..."
               value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, notes: capitalizeText(e.target.value) })}
               className="text-sm resize-none"
             />
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2 flex-shrink-0 sticky bottom-0 bg-white">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2 flex-shrink-0">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto h-9">
               Cancel
             </Button>

@@ -211,7 +211,7 @@ export default function FinancePage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
           <Card className="border-green-200 bg-gradient-to-br from-green-50 to-white">
             <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
               <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
@@ -275,14 +275,46 @@ export default function FinancePage() {
               <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">On track</p>
             </CardContent>
           </Card>
+
+          <Card className="border-teal-200 bg-gradient-to-br from-teal-50 to-white">
+            <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
+                <Target className="h-3 w-3 sm:h-4 sm:w-4 text-teal-600" />
+                <span className="hidden xs:inline">Overall Savings</span>
+                <span className="xs:hidden">Savings</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-teal-600">
+                ${savingsWithProgress.reduce((sum, goal) => sum + goal.current_amount, 0).toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">{savingsGoals.length} goals</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-white">
+            <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-orange-600" />
+                <span className="hidden xs:inline">Planned Expenses</span>
+                <span className="xs:hidden">Planned</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-600">
+                ${budgets.reduce((sum, budget) => sum + Number(budget.monthly_limit), 0).toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">Budget total</p>
+            </CardContent>
+          </Card>
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+        <Tabs defaultValue="transactions" className="space-y-4 sm:space-y-6">
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 h-auto">
+            <TabsTrigger value="transactions" className="text-xs sm:text-sm py-2">Transactions</TabsTrigger>
             <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">Overview</TabsTrigger>
             <TabsTrigger value="budgets" className="text-xs sm:text-sm py-2">Budgets</TabsTrigger>
             <TabsTrigger value="savings" className="text-xs sm:text-sm py-2">Savings</TabsTrigger>
-            <TabsTrigger value="transactions" className="text-xs sm:text-sm py-2">Transactions</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
