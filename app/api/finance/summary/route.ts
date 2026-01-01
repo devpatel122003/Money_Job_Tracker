@@ -28,7 +28,7 @@ export async function GET(request: Request) {
       endDate = nextMonth.toISOString().split("T")[0]
     }
 
-    // Get income for the period
+    // Get income for the period (monthly)
     const incomeResult = await sql`
       SELECT COALESCE(SUM(amount), 0) as total
       FROM income
@@ -37,13 +37,35 @@ export async function GET(request: Request) {
       AND income_date < ${endDate}
     `
 
-    // Get expenses for the period
+    // Get expenses for the period (monthly)
     const expensesResult = await sql`
       SELECT COALESCE(SUM(amount), 0) as total
       FROM expenses
       WHERE user_id = ${user.id}
       AND expense_date >= ${startDate}
       AND expense_date < ${endDate}
+    `
+
+    // Get overall balance (all time) - Total income minus total expenses
+    const overallIncomeResult = await sql`
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM income
+      WHERE user_id = ${user.id}
+    `
+
+    const overallExpensesResult = await sql`
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM expenses
+      WHERE user_id = ${user.id}
+    `
+
+    // Get total planned expenses (future only)
+    const today = new Date().toISOString().split('T')[0]
+    const plannedExpensesResult = await sql`
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM planned_expenses
+      WHERE user_id = ${user.id}
+      AND planned_date > ${today}
     `
 
     // Get expenses by category for the period
@@ -57,13 +79,21 @@ export async function GET(request: Request) {
       ORDER BY total DESC
     `
 
-    const totalIncome = Number(incomeResult[0]?.total || 0)
-    const totalExpenses = Number(expensesResult[0]?.total || 0)
+    const monthlyIncome = Number(incomeResult[0]?.total || 0)
+    const monthlyExpenses = Number(expensesResult[0]?.total || 0)
+    const totalAllIncome = Number(overallIncomeResult[0]?.total || 0)
+    const totalAllExpenses = Number(overallExpensesResult[0]?.total || 0)
+    const totalPlannedExpenses = Number(plannedExpensesResult[0]?.total || 0)
+
+    // Overall balance = Total income - Total expenses - Future planned expenses
+    const overallBalance = totalAllIncome - totalAllExpenses - totalPlannedExpenses
 
     return NextResponse.json({
-      totalIncome,
-      totalExpenses,
-      balance: totalIncome - totalExpenses,
+      monthlyIncome,        // Income for selected month
+      monthlyExpenses,      // Expenses for selected month
+      monthlyBalance: monthlyIncome - monthlyExpenses,  // Monthly balance
+      overallBalance,       // Total balance including planned expenses deduction
+      totalPlannedExpenses, // Total future planned expenses
       categoryExpenses,
     })
   } catch (error) {

@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 import { getUserSession } from "@/lib/auth"
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const user = await getUserSession()
         if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        const id = params.id
+        const { id } = await params
 
         await sql`
       DELETE FROM planned_expenses 
@@ -23,14 +23,14 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const user = await getUserSession()
         if (!user) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        const id = params.id
+        const { id } = await params
         const body = await request.json()
         const { is_paid } = body
 
