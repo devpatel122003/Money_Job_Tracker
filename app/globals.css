@@ -126,25 +126,40 @@
 }
 
 /* ========================================
-   DATE INPUT MOBILE FIX
+   DATE INPUT AND GRID MOBILE FIXES
    ======================================== */
 
-/* Fix date input width on mobile */
+/* Aggressive date input width fix */
 input[type="date"] {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Force date inputs inside grids to behave */
+.grid input[type="date"],
+[class*="grid-cols"] input[type="date"] {
   min-width: 0 !important;
   max-width: 100% !important;
   width: 100% !important;
 }
 
-/* Ensure date picker icon is visible and doesn't cause overflow */
+/* Ensure grid children have proper min-width */
+.grid>*,
+[class*="grid-cols"]>* {
+  min-width: 0;
+}
+
+/* Date picker icon control */
 input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.7;
   margin-left: auto;
   flex-shrink: 0;
   padding: 0;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator:hover {
@@ -153,11 +168,19 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 /* Prevent date input text from overflowing */
 input[type="date"]::-webkit-datetime-edit {
-  padding-right: 4px;
+  padding-right: 2px;
   overflow: hidden;
+  text-overflow: clip;
 }
 
 input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
   padding: 0;
 }
 
@@ -166,25 +189,54 @@ input[type="date"]::-moz-calendar-picker-indicator {
   cursor: pointer;
 }
 
-/* Ensure proper width calculation on mobile */
+/* Mobile-specific fixes */
 @media (max-width: 640px) {
+
+  /* Force all date inputs to proper width on mobile */
   input[type="date"] {
     width: 100% !important;
     min-width: 0 !important;
-    box-sizing: border-box;
-  }
-
-  /* Prevent horizontal scroll in dialogs */
-  [role="dialog"] input[type="date"],
-  dialog input[type="date"] {
     max-width: 100% !important;
-    overflow: hidden;
+    box-sizing: border-box !important;
   }
 
-  /* Ensure the date input container doesn't overflow */
-  [role="dialog"] .space-y-1\.5:has(input[type="date"]),
-  dialog .space-y-1\.5:has(input[type="date"]) {
+  /* Prevent dialog content from overflowing */
+  [role="dialog"],
+  [data-slot="dialog-content"] {
+    max-width: calc(100vw - 2rem) !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Ensure dialog forms don't overflow */
+  [role="dialog"] form,
+  [data-slot="dialog-content"] form {
+    overflow-x: hidden !important;
+    max-width: 100%;
+  }
+
+  /* Fix grid overflow issues */
+  [role="dialog"] .grid,
+  [role="dialog"] [class*="grid-cols"],
+  [data-slot="dialog-content"] .grid,
+  [data-slot="dialog-content"] [class*="grid-cols"] {
     min-width: 0;
     width: 100%;
+  }
+
+  /* Ensure all grid children respect container width */
+  [role="dialog"] .grid>*,
+  [role="dialog"] [class*="grid-cols"]>*,
+  [data-slot="dialog-content"] .grid>*,
+  [data-slot="dialog-content"] [class*="grid-cols"]>* {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Ensure space-y containers with date inputs don't overflow */
+  [role="dialog"] .space-y-1\.5:has(input[type="date"]),
+  [data-slot="dialog-content"] .space-y-1\.5:has(input[type="date"]) {
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
   }
 }

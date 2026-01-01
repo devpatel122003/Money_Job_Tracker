@@ -115,9 +115,9 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
             {initialData ? "Update your job application details" : "Track a new job application"}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3 overflow-y-auto flex-1 pr-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+        <form onSubmit={handleSubmit} className="space-y-3 overflow-y-auto flex-1 pr-2 overflow-x-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+            <div className="space-y-1.5 min-w-0">
               <Label htmlFor="companyName" className="text-sm">Company *</Label>
               <Input
                 id="companyName"
@@ -127,7 +127,7 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
                 className="text-sm h-9"
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0">
               <Label htmlFor="positionTitle" className="text-sm">Position *</Label>
               <Input
                 id="positionTitle"
@@ -139,7 +139,7 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <Label htmlFor="jobUrl" className="text-sm">Job URL</Label>
             <Input
               id="jobUrl"
@@ -151,8 +151,8 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+            <div className="space-y-1.5 min-w-0">
               <Label htmlFor="location" className="text-sm">Location</Label>
               <Input
                 id="location"
@@ -162,7 +162,7 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
                 className="text-sm h-9"
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0">
               <Label htmlFor="salaryRange" className="text-sm">Salary Range</Label>
               <Input
                 id="salaryRange"
@@ -174,8 +174,8 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+            <div className="space-y-1.5 min-w-0">
               <Label htmlFor="applicationStatus" className="text-sm">Status</Label>
               <Select
                 value={formData.applicationStatus}
@@ -196,22 +196,23 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0">
               <Label htmlFor="applicationDate" className="text-sm">Date *</Label>
-              <Input
-                id="applicationDate"
-                type="date"
-                required
-                value={formData.applicationDate}
-                onChange={(e) => setFormData({ ...formData, applicationDate: e.target.value })}
-                className="text-sm h-9 w-full [&::-webkit-calendar-picker-indicator]:opacity-100"
-                style={{ minWidth: 0 }}
-              />
+              <div className="min-w-0">
+                <Input
+                  id="applicationDate"
+                  type="date"
+                  required
+                  value={formData.applicationDate}
+                  onChange={(e) => setFormData({ ...formData, applicationDate: e.target.value })}
+                  className="text-sm h-9 w-full"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+            <div className="space-y-1.5 min-w-0">
               <Label htmlFor="contactName" className="text-sm">Contact Name</Label>
               <Input
                 id="contactName"
@@ -221,7 +222,7 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
                 className="text-sm h-9"
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 min-w-0">
               <Label htmlFor="contactEmail" className="text-sm">Contact Email</Label>
               <Input
                 id="contactEmail"
@@ -234,19 +235,20 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <Label htmlFor="followUpDate" className="text-sm">Follow-up Date</Label>
-            <Input
-              id="followUpDate"
-              type="date"
-              value={formData.followUpDate}
-              onChange={(e) => setFormData({ ...formData, followUpDate: e.target.value })}
-              className="text-sm h-9 w-full [&::-webkit-calendar-picker-indicator]:opacity-100"
-              style={{ minWidth: 0 }}
-            />
+            <div className="min-w-0">
+              <Input
+                id="followUpDate"
+                type="date"
+                value={formData.followUpDate}
+                onChange={(e) => setFormData({ ...formData, followUpDate: e.target.value })}
+                className="text-sm h-9 w-full"
+              />
+            </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <Label htmlFor="notes" className="text-sm">Notes</Label>
             <Textarea
               id="notes"
