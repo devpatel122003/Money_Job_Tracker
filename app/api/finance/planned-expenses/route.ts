@@ -11,7 +11,10 @@ export async function GET(request: NextRequest) {
 
         const searchParams = request.nextUrl.searchParams
         const month = searchParams.get("month")
-        const today = new Date().toISOString().split('T')[0]
+
+        // Get today's date in YYYY-MM-DD format without timezone conversion
+        const now = new Date()
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
         // Auto-convert past planned expenses to actual expenses
         await convertPastPlannedExpenses(user.id, today)
@@ -58,7 +61,9 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
         }
 
-        const today = new Date().toISOString().split('T')[0]
+        // Get today's date in the same format as plannedDate (YYYY-MM-DD)
+        const now = new Date()
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
         // If planned date is today or past, create as actual expense
         if (plannedDate <= today) {
