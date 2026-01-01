@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -18,6 +18,9 @@ import {
   Receipt,
   CalendarDays,
   BarChart3,
+  Home,
+  CalendarRange,
+  PieChart,
 } from "lucide-react"
 import { IncomeForm } from "@/components/income-form"
 import { ExpenseForm } from "@/components/expense-form"
@@ -27,6 +30,15 @@ import { ExpenseCategoryChart } from "@/components/expense-category-chart"
 import { IncomeVsExpensesChart } from "@/components/income-vs-expenses-chart"
 
 type ViewType = "transactions" | "planned" | "budgets"
+
+// Mobile navigation interface
+interface MobileNavItem {
+  id: ViewType | "overview"
+  label: string
+  icon: React.ReactNode
+  color: string
+  bgColor: string
+}
 
 export default function FinancePage() {
   const [currentMonth, setCurrentMonth] = useState(new Date())
@@ -41,6 +53,57 @@ export default function FinancePage() {
   const [showExpenseForm, setShowExpenseForm] = useState(false)
   const [showBudgetForm, setShowBudgetForm] = useState(false)
   const [showPlannedExpenseForm, setShowPlannedExpenseForm] = useState(false)
+  const [activeMobileTab, setActiveMobileTab] = useState<ViewType | "overview">("overview")
+  const [isMobile, setIsMobile] = useState(false)
+  const mainContentRef = useRef<HTMLDivElement>(null)
+
+  // Mobile navigation items - only shown on mobile
+  const mobileNavItems: MobileNavItem[] = [
+    {
+      id: "overview",
+      label: "Overview",
+      icon: <Home className="h-5 w-5" />,
+      color: "text-blue-600",
+      bgColor: "bg-blue-100",
+    },
+    {
+      id: "transactions",
+      label: "Transactions",
+      icon: <Receipt className="h-5 w-5" />,
+      color: "text-green-600",
+      bgColor: "bg-green-100",
+    },
+    {
+      id: "planned",
+      label: "Plan Ahead",
+      icon: <CalendarRange className="h-5 w-5" />,
+      color: "text-orange-600",
+      bgColor: "bg-orange-100",
+    },
+    {
+      id: "budgets",
+      label: "Budgets",
+      icon: <PieChart className="h-5 w-5" />,
+      color: "text-purple-600",
+      bgColor: "bg-purple-100",
+    },
+  ]
+
+  // Check if mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    // Initial check
+    checkMobile()
+
+    // Add event listener
+    window.addEventListener('resize', checkMobile)
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const fetchData = async () => {
     try {
@@ -80,6 +143,31 @@ export default function FinancePage() {
   useEffect(() => {
     fetchData()
   }, [currentMonth])
+
+  // Sync active mobile tab with current view
+  useEffect(() => {
+    if (currentView === null) {
+      setActiveMobileTab("overview")
+    } else {
+      setActiveMobileTab(currentView)
+    }
+  }, [currentView])
+
+  // Handle mobile tab click
+  const handleMobileTabClick = (tabId: ViewType | "overview") => {
+    setActiveMobileTab(tabId)
+
+    if (tabId === "overview") {
+      setCurrentView(null)
+    } else {
+      setCurrentView(tabId)
+    }
+
+    // Scroll to top on mobile navigation
+    if (isMobile && mainContentRef.current) {
+      mainContentRef.current.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
 
   const handleDeleteIncome = async (id: number) => {
     if (!confirm("Are you sure you want to delete this income entry?")) return
@@ -179,7 +267,7 @@ export default function FinancePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
-      <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl">
+      <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl" ref={mainContentRef}>
         {/* Header with Navigation */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col gap-4">
@@ -210,14 +298,14 @@ export default function FinancePage() {
               </div>
             </div>
 
-            {/* Tab Navigation */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            {/* Desktop Tab Navigation (Hidden on Mobile) */}
+            <div className="hidden md:flex items-center gap-2 overflow-x-auto pb-1">
               <Button
                 variant={currentView === null ? "default" : "outline"}
                 onClick={() => setCurrentView(null)}
                 className={`flex-shrink-0 ${currentView === null
-                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-                    : "hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
+                  ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+                  : "hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
                   }`}
               >
                 <BarChart3 className="h-4 w-4 mr-2" />
@@ -227,8 +315,8 @@ export default function FinancePage() {
                 variant={currentView === "transactions" ? "default" : "outline"}
                 onClick={() => setCurrentView("transactions")}
                 className={`flex-shrink-0 ${currentView === "transactions"
-                    ? "bg-green-600 hover:bg-green-700 text-white shadow-md"
-                    : "hover:bg-green-50 hover:text-green-700 hover:border-green-300"
+                  ? "bg-green-600 hover:bg-green-700 text-white shadow-md"
+                  : "hover:bg-green-50 hover:text-green-700 hover:border-green-300"
                   }`}
               >
                 <Receipt className="h-4 w-4 mr-2" />
@@ -238,8 +326,8 @@ export default function FinancePage() {
                 variant={currentView === "planned" ? "default" : "outline"}
                 onClick={() => setCurrentView("planned")}
                 className={`flex-shrink-0 ${currentView === "planned"
-                    ? "bg-orange-600 hover:bg-orange-700 text-white shadow-md"
-                    : "hover:bg-orange-50 hover:text-orange-700 hover:border-orange-300"
+                  ? "bg-orange-600 hover:bg-orange-700 text-white shadow-md"
+                  : "hover:bg-orange-50 hover:text-orange-700 hover:border-orange-300"
                   }`}
               >
                 <CalendarDays className="h-4 w-4 mr-2" />
@@ -249,8 +337,8 @@ export default function FinancePage() {
                 variant={currentView === "budgets" ? "default" : "outline"}
                 onClick={() => setCurrentView("budgets")}
                 className={`flex-shrink-0 ${currentView === "budgets"
-                    ? "bg-purple-600 hover:bg-purple-700 text-white shadow-md"
-                    : "hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300"
+                  ? "bg-purple-600 hover:bg-purple-700 text-white shadow-md"
+                  : "hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300"
                   }`}
               >
                 <Target className="h-4 w-4 mr-2" />
@@ -656,6 +744,64 @@ export default function FinancePage() {
           }}
         />
       </div>
+
+      {/* Mobile Bottom Navigation Bar (Conditionally rendered only on mobile) */}
+      {isMobile && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t z-40 shadow-lg">
+          <div className="container mx-auto px-2">
+            <div className="flex items-center justify-between py-2">
+              {mobileNavItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleMobileTabClick(item.id)}
+                  className="flex flex-col items-center justify-center flex-1 relative group pt-1 pb-1"
+                >
+                  {/* Active Indicator */}
+                  {activeMobileTab === item.id && (
+                    <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 h-1 w-8 rounded-full bg-current opacity-80"></div>
+                  )}
+
+                  {/* Icon Container */}
+                  <div className={`
+                    p-2 rounded-full mb-1 transition-all duration-200
+                    ${activeMobileTab === item.id
+                      ? `${item.bgColor} scale-110 shadow-md`
+                      : 'bg-gray-100 group-hover:scale-105'
+                    }
+                  `}>
+                    <div className={activeMobileTab === item.id ? item.color : 'text-gray-500'}>
+                      {item.icon}
+                    </div>
+                  </div>
+
+                  {/* Label */}
+                  <span className={`
+                    text-[10px] font-medium transition-all duration-200 text-center
+                    ${activeMobileTab === item.id ? item.color : 'text-gray-500'}
+                    ${activeMobileTab === item.id ? 'font-bold' : ''}
+                  `}>
+                    {item.label}
+                  </span>
+
+                  {/* Notification Badge for important updates */}
+                  {item.id === 'transactions' && expenses.length > 0 && activeMobileTab !== 'transactions' && (
+                    <span className="absolute top-0 right-1/3 h-1.5 w-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                  )}
+                  {item.id === 'planned' && allPlannedExpenses.length > 0 && activeMobileTab !== 'planned' && (
+                    <span className="absolute top-0 right-1/3 h-1.5 w-1.5 bg-orange-500 rounded-full animate-pulse"></span>
+                  )}
+                  {item.id === 'budgets' && budgetProgress.some(b => b.isOverBudget) && activeMobileTab !== 'budgets' && (
+                    <span className="absolute top-0 right-1/3 h-1.5 w-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add bottom padding for mobile navigation bar (Only when mobile nav is shown) */}
+      {isMobile && <div className="pb-16"></div>}
     </div>
   )
 }

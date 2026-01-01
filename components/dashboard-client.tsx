@@ -98,7 +98,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white">
+          <Card className="border-blue-200/50 bg-gradient-to-br from-blue-50/80 to-white/80 backdrop-blur-xl">
             <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
               <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
                 <Briefcase className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
@@ -112,7 +112,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
             </CardContent>
           </Card>
 
-          <Card className="border-green-200 bg-gradient-to-br from-green-50 to-white">
+          <Card className="border-green-200/50 bg-gradient-to-br from-green-50/80 to-white/80 backdrop-blur-xl">
             <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
               <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
                 <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
@@ -126,7 +126,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
             </CardContent>
           </Card>
 
-          <Card className="border-red-200 bg-gradient-to-br from-red-50 to-white">
+          <Card className="border-red-200/50 bg-gradient-to-br from-red-50/80 to-white/80 backdrop-blur-xl">
             <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
               <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
                 <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
@@ -141,7 +141,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
           </Card>
 
           <Card
-            className={`border-purple-200 bg-gradient-to-br ${stats.balance >= 0 ? "from-purple-50" : "from-amber-50"} to-white`}
+            className={`border-purple-200/50 bg-gradient-to-br ${stats.balance >= 0 ? "from-purple-50/80" : "from-amber-50/80"} to-white/80 backdrop-blur-xl`}
           >
             <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
               <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
@@ -161,7 +161,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
         {/* Quick Links */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
           <Link href="/jobs" className="block">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+            <Card className="hover:shadow-xl transition-all cursor-pointer h-full backdrop-blur-xl">
               <CardHeader className="p-4 sm:p-6">
                 <CardTitle className="flex items-center justify-between text-base sm:text-lg">
                   <span className="flex items-center gap-2">
@@ -178,7 +178,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
           </Link>
 
           <Link href="/finance" className="block">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+            <Card className="hover:shadow-xl transition-all cursor-pointer h-full backdrop-blur-xl">
               <CardHeader className="p-4 sm:p-6">
                 <CardTitle className="flex items-center justify-between text-base sm:text-lg">
                   <span className="flex items-center gap-2">

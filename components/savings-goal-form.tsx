@@ -110,6 +110,7 @@ export function SavingsGoalForm({ open, onOpenChange, onSuccess }: SavingsGoalFo
               type="date"
               value={targetDate}
               onChange={(e) => setTargetDate(e.target.value)}
+              className="max-w-[180px]"
             />
           </div>
 

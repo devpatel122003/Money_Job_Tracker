@@ -143,6 +143,7 @@ export function IncomeForm({ open, onOpenChange, onSuccess }: IncomeFormProps) {
               required
               value={formData.incomeDate}
               onChange={(e) => setFormData({ ...formData, incomeDate: e.target.value })}
+              className="max-w-[180px]"
             />
           </div>
 

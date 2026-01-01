@@ -12,7 +12,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
 
   return (
     <>
-      <Navigation />
+      <Navigation user={user} />
       {children}
     </>
   )

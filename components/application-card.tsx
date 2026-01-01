@@ -53,7 +53,7 @@ export function ApplicationCard({ application, onEdit, onDelete }: ApplicationCa
   }
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-xl transition-all backdrop-blur-xl">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">

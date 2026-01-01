@@ -111,6 +111,7 @@ export function ExpenseForm({ open, onOpenChange, onSuccess }: ExpenseFormProps)
               required
               value={formData.expenseDate}
               onChange={(e) => setFormData({ ...formData, expenseDate: e.target.value })}
+              className="max-w-[180px]"
             />
           </div>
 

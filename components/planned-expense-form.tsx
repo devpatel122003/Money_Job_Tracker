@@ -119,6 +119,7 @@ export function PlannedExpenseForm({ open, onOpenChange, onSuccess }: PlannedExp
               required
               value={formData.plannedDate}
               onChange={(e) => setFormData({ ...formData, plannedDate: e.target.value })}
+              className="max-w-[180px]"
             />
           </div>
 

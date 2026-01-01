@@ -12,7 +12,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <Navigation />
+      <Navigation user={user} />
       <DashboardClient user={user} />
     </>
   )
