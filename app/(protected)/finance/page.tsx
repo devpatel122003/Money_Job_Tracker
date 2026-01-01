@@ -48,6 +48,13 @@ export default function FinancePage() {
   const [expenses, setExpenses] = useState<any[]>([])
   const [budgets, setBudgets] = useState<any[]>([])
   const [allPlannedExpenses, setAllPlannedExpenses] = useState<any[]>([])
+
+  // Helper function to parse date string without timezone conversion
+  // Parses "YYYY-MM-DD" as local date instead of UTC
+  const parseLocalDate = (dateString: string) => {
+    const [year, month, day] = dateString.split('-').map(Number)
+    return new Date(year, month - 1, day)
+  }
   const [loading, setLoading] = useState(true)
   const [showIncomeForm, setShowIncomeForm] = useState(false)
   const [showExpenseForm, setShowExpenseForm] = useState(false)
@@ -249,7 +256,7 @@ export default function FinancePage() {
 
   // Group planned expenses by month
   const plannedByMonth = allPlannedExpenses.reduce((acc: any, expense: any) => {
-    const month = new Date(expense.planned_date).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    const month = parseLocalDate(expense.planned_date).toLocaleDateString("en-US", { month: "long", year: "numeric" })
     if (!acc[month]) {
       acc[month] = []
     }
@@ -482,7 +489,7 @@ export default function FinancePage() {
                         <div className="flex-1 min-w-0">
                           <div className="font-medium truncate">{item.source}</div>
                           <div className="text-sm text-muted-foreground">
-                            {new Date(item.income_date).toLocaleDateString()} • {item.category}
+                            {parseLocalDate(item.income_date).toLocaleDateString()} • {item.category}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -524,7 +531,7 @@ export default function FinancePage() {
                         <div className="flex-1 min-w-0">
                           <div className="font-medium truncate">{item.merchant || item.category}</div>
                           <div className="text-sm text-muted-foreground">
-                            {new Date(item.expense_date).toLocaleDateString()} • {item.category}
+                            {parseLocalDate(item.expense_date).toLocaleDateString()} • {item.category}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -582,7 +589,7 @@ export default function FinancePage() {
                             <div className="flex-1 min-w-0">
                               <div className="font-medium truncate">{item.title}</div>
                               <div className="text-sm text-muted-foreground">
-                                {new Date(item.planned_date).toLocaleDateString('en-US', {
+                                {parseLocalDate(item.planned_date).toLocaleDateString('en-US', {
                                   weekday: 'short',
                                   month: 'short',
                                   day: 'numeric'
