@@ -68,6 +68,49 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
     }
   }, [initialData, open])
 
+  // Format salary input to proper format
+  const formatSalaryInput = (value: string) => {
+    // Remove all non-numeric characters except dash and comma
+    let cleaned = value.replace(/[^\d,\-\s]/g, "")
+
+    // If there's a dash, split into min and max
+    if (cleaned.includes("-")) {
+      const parts = cleaned.split("-").map(part => part.trim())
+      if (parts.length === 2) {
+        const min = parts[0].replace(/,/g, "")
+        const max = parts[1].replace(/,/g, "")
+
+        // Format with commas and dollar signs
+        if (min && max) {
+          return `$${Number(min).toLocaleString()} - $${Number(max).toLocaleString()}`
+        } else if (min) {
+          return `$${Number(min).toLocaleString()}`
+        }
+      }
+    }
+
+    // If no dash, just format as single value
+    const num = cleaned.replace(/,/g, "")
+    if (num) {
+      return `$${Number(num).toLocaleString()}`
+    }
+
+    return cleaned
+  }
+
+  const handleSalaryChange = (value: string) => {
+    // Allow user to type freely but store raw value
+    setFormData({ ...formData, salaryRange: value })
+  }
+
+  const handleSalaryBlur = () => {
+    // Format on blur
+    if (formData.salaryRange) {
+      const formatted = formatSalaryInput(formData.salaryRange)
+      setFormData({ ...formData, salaryRange: formatted })
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -166,11 +209,13 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
               <Label htmlFor="salaryRange" className="text-sm">Salary Range</Label>
               <Input
                 id="salaryRange"
-                placeholder="$XX,XXX - $XX,XXX"
+                placeholder="50000 - 70000 or 60000"
                 value={formData.salaryRange}
-                onChange={(e) => setFormData({ ...formData, salaryRange: e.target.value })}
+                onChange={(e) => handleSalaryChange(e.target.value)}
+                onBlur={handleSalaryBlur}
                 className="text-sm h-9"
               />
+              <p className="text-xs text-muted-foreground">Enter like: 50000-70000 or 60000</p>
             </div>
           </div>
 

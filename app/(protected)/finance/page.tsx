@@ -28,6 +28,7 @@ import { BudgetForm } from "@/components/budget-form"
 import { PlannedExpenseForm } from "@/components/planned-expense-form"
 import { ExpenseCategoryChart } from "@/components/expense-category-chart"
 import { IncomeVsExpensesChart } from "@/components/income-vs-expenses-chart"
+import { capitalizeText } from "@/lib/utils"
 
 type ViewType = "transactions" | "planned" | "budgets"
 
@@ -508,7 +509,7 @@ export default function FinancePage() {
                         <div className="flex-1 min-w-0">
                           <div className="font-medium truncate">{item.source}</div>
                           <div className="text-sm text-muted-foreground">
-                            {formatLocalDate(item.income_date)} • {item.category}
+                            {formatLocalDate(item.income_date)} • {capitalizeText(item.category)}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -548,9 +549,9 @@ export default function FinancePage() {
                     {expenses.map((item) => (
                       <div key={item.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium truncate">{item.merchant || item.category}</div>
+                          <div className="font-medium truncate">{item.merchant || capitalizeText(item.category)}</div>
                           <div className="text-sm text-muted-foreground">
-                            {formatLocalDate(item.expense_date)} • {item.category}
+                            {formatLocalDate(item.expense_date)} • {capitalizeText(item.category)}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -612,7 +613,7 @@ export default function FinancePage() {
                                   weekday: 'short',
                                   month: 'short',
                                   day: 'numeric'
-                                })} • {item.category}
+                                })} • {capitalizeText(item.category)}
                               </div>
                               {item.description && (
                                 <div className="text-xs text-muted-foreground mt-1">{item.description}</div>
