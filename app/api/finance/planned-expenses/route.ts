@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { query } from "@/lib/db"
+import { sql } from "@/lib/db"
 import { getUserSession } from "@/lib/auth"
 
 export async function GET(request: NextRequest) {
@@ -12,21 +12,24 @@ export async function GET(request: NextRequest) {
         const searchParams = request.nextUrl.searchParams
         const month = searchParams.get("month")
 
-        let sql = `
-      SELECT * FROM planned_expenses 
-      WHERE user_id = $1
-    `
-        const params: any[] = [user.id]
+        let result
 
         if (month) {
-            sql += ` AND TO_CHAR(planned_date, 'YYYY-MM') = $2`
-            params.push(month)
+            result = await sql`
+        SELECT * FROM planned_expenses 
+        WHERE user_id = ${user.id}
+        AND TO_CHAR(planned_date, 'YYYY-MM') = ${month}
+        ORDER BY planned_date ASC
+      `
+        } else {
+            result = await sql`
+        SELECT * FROM planned_expenses 
+        WHERE user_id = ${user.id}
+        ORDER BY planned_date ASC
+      `
         }
 
-        sql += ` ORDER BY planned_date ASC`
-
-        const result = await query(sql, params)
-        return NextResponse.json(result.rows)
+        return NextResponse.json(result)
     } catch (error) {
         console.error("Error fetching planned expenses:", error)
         return NextResponse.json({ error: "Failed to fetch planned expenses" }, { status: 500 })
@@ -47,15 +50,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
         }
 
-        const result = await query(
-            `INSERT INTO planned_expenses 
-       (user_id, title, category, amount, planned_date, description) 
-       VALUES ($1, $2, $3, $4, $5, $6) 
-       RETURNING *`,
-            [user.id, title, category, amount, plannedDate, description || null]
-        )
+        const result = await sql`
+      INSERT INTO planned_expenses 
+      (user_id, title, category, amount, planned_date, description) 
+      VALUES (${user.id}, ${title}, ${category}, ${amount}, ${plannedDate}, ${description || null})
+      RETURNING *
+    `
 
-        return NextResponse.json(result.rows[0], { status: 201 })
+        return NextResponse.json(result[0], { status: 201 })
     } catch (error) {
         console.error("Error creating planned expense:", error)
         return NextResponse.json({ error: "Failed to create planned expense" }, { status: 500 })

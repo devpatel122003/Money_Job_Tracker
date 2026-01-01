@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { query } from "@/lib/db"
+import { sql } from "@/lib/db"
 import { getUserSession } from "@/lib/auth"
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
@@ -11,7 +11,10 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
         const id = params.id
 
-        await query(`DELETE FROM planned_expenses WHERE id = $1 AND user_id = $2`, [id, user.id])
+        await sql`
+      DELETE FROM planned_expenses 
+      WHERE id = ${id} AND user_id = ${user.id}
+    `
 
         return NextResponse.json({ success: true })
     } catch (error) {
@@ -31,15 +34,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         const body = await request.json()
         const { is_paid } = body
 
-        const result = await query(
-            `UPDATE planned_expenses 
-       SET is_paid = $1, updated_at = CURRENT_TIMESTAMP 
-       WHERE id = $2 AND user_id = $3 
-       RETURNING *`,
-            [is_paid, id, user.id]
-        )
+        const result = await sql`
+      UPDATE planned_expenses 
+      SET is_paid = ${is_paid}, updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ${id} AND user_id = ${user.id}
+      RETURNING *
+    `
 
-        return NextResponse.json(result.rows[0])
+        return NextResponse.json(result[0])
     } catch (error) {
         console.error("Error updating planned expense:", error)
         return NextResponse.json({ error: "Failed to update planned expense" }, { status: 500 })
