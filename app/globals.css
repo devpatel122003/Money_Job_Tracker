@@ -126,117 +126,170 @@
 }
 
 /* ========================================
-   DATE INPUT AND GRID MOBILE FIXES
+   ULTRA-AGGRESSIVE DATE INPUT FIX
+   This FORCES date inputs to stay within bounds
    ======================================== */
 
-/* Aggressive date input width fix */
+/* Base date input constraint - MOST IMPORTANT */
 input[type="date"] {
   min-width: 0 !important;
   max-width: 100% !important;
   width: 100% !important;
   box-sizing: border-box !important;
+  /* Force the internal content to shrink */
+  font-size: 0.875rem !important;
+  /* 14px */
 }
 
-/* Force date inputs inside grids to behave */
-.grid input[type="date"],
-[class*="grid-cols"] input[type="date"] {
-  min-width: 0 !important;
+/* Force date input internals to fit */
+input[type="date"]::-webkit-datetime-edit {
+  display: flex !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  max-width: calc(100% - 24px) !important;
+  /* Leave room for calendar icon */
+}
+
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  display: flex !important;
   max-width: 100% !important;
-  width: 100% !important;
+  overflow: hidden !important;
 }
 
-/* Ensure grid children have proper min-width */
-.grid>*,
-[class*="grid-cols"]>* {
-  min-width: 0;
+/* Make date segments smaller to fit */
+input[type="date"]::-webkit-datetime-edit-text {
+  padding: 0 1px !important;
 }
 
-/* Date picker icon control */
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  padding: 0 2px !important;
+  min-width: 0 !important;
+}
+
+/* Calendar picker icon - keep small and contained */
 input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.7;
-  margin-left: auto;
-  flex-shrink: 0;
-  padding: 0;
-  width: 18px;
-  height: 18px;
+  flex-shrink: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin-left: 4px !important;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
 }
 
-/* Prevent date input text from overflowing */
-input[type="date"]::-webkit-datetime-edit {
-  padding-right: 2px;
-  overflow: hidden;
-  text-overflow: clip;
-}
-
-input[type="date"]::-webkit-datetime-edit-fields-wrapper {
-  padding: 0;
-}
-
-input[type="date"]::-webkit-datetime-edit-text,
-input[type="date"]::-webkit-datetime-edit-month-field,
-input[type="date"]::-webkit-datetime-edit-day-field,
-input[type="date"]::-webkit-datetime-edit-year-field {
-  padding: 0;
-}
-
-/* Fix for Firefox */
+/* Firefox fixes */
 input[type="date"]::-moz-calendar-picker-indicator {
   cursor: pointer;
+  width: 16px !important;
+  height: 16px !important;
 }
 
-/* Mobile-specific fixes */
+/* Force grid children to respect bounds */
+.grid>*,
+[class*="grid-cols"]>* {
+  min-width: 0 !important;
+}
+
+/* Mobile-specific aggressive fixes */
 @media (max-width: 640px) {
 
-  /* Force all date inputs to proper width on mobile */
+  /* Even more aggressive on mobile */
   input[type="date"] {
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+    font-size: 0.75rem !important;
+    /* 12px - smaller on mobile */
   }
 
-  /* Prevent dialog content from overflowing */
+  /* Really squeeze the date input internals on mobile */
+  input[type="date"]::-webkit-datetime-edit {
+    max-width: calc(100% - 20px) !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Make date fields even more compact on mobile */
+  input[type="date"]::-webkit-datetime-edit-month-field,
+  input[type="date"]::-webkit-datetime-edit-day-field,
+  input[type="date"]::-webkit-datetime-edit-year-field {
+    padding: 0 1px !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Prevent dialog from overflowing */
   [role="dialog"],
   [data-slot="dialog-content"] {
     max-width: calc(100vw - 2rem) !important;
     overflow-x: hidden !important;
   }
 
-  /* Ensure dialog forms don't overflow */
+  /* Ensure forms in dialogs don't overflow */
   [role="dialog"] form,
   [data-slot="dialog-content"] form {
     overflow-x: hidden !important;
-    max-width: 100%;
+    max-width: 100% !important;
   }
 
-  /* Fix grid overflow issues */
+  /* Fix grid overflow */
   [role="dialog"] .grid,
   [role="dialog"] [class*="grid-cols"],
   [data-slot="dialog-content"] .grid,
   [data-slot="dialog-content"] [class*="grid-cols"] {
-    min-width: 0;
-    width: 100%;
+    min-width: 0 !important;
+    max-width: 100% !important;
   }
 
-  /* Ensure all grid children respect container width */
+  /* Force all grid children to respect width */
   [role="dialog"] .grid>*,
   [role="dialog"] [class*="grid-cols"]>*,
   [data-slot="dialog-content"] .grid>*,
   [data-slot="dialog-content"] [class*="grid-cols"]>* {
-    min-width: 0;
-    max-width: 100%;
+    min-width: 0 !important;
+    max-width: 100% !important;
   }
 
-  /* Ensure space-y containers with date inputs don't overflow */
+  /* Containers with date inputs */
   [role="dialog"] .space-y-1\.5:has(input[type="date"]),
   [data-slot="dialog-content"] .space-y-1\.5:has(input[type="date"]) {
-    min-width: 0;
-    width: 100%;
-    overflow: hidden;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  /* Ensure the wrapper div also constrains */
+  [role="dialog"] div:has(> input[type="date"]),
+  [data-slot="dialog-content"] div:has(> input[type="date"]) {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 375px) {
+  input[type="date"] {
+    font-size: 0.7rem !important;
+    /* 11.2px - even smaller */
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  input[type="date"]::-webkit-datetime-edit-month-field,
+  input[type="date"]::-webkit-datetime-edit-day-field,
+  input[type="date"]::-webkit-datetime-edit-year-field {
+    padding: 0 !important;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    width: 14px !important;
+    height: 14px !important;
   }
 }
