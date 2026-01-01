@@ -20,6 +20,7 @@ interface JobApplicationFormProps {
 
 export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData }: JobApplicationFormProps) {
   const [loading, setLoading] = useState(false)
+  const [salaryError, setSalaryError] = useState("")
   const [formData, setFormData] = useState({
     companyName: "",
     positionTitle: "",
@@ -36,6 +37,7 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
 
   // Update form data when initialData changes (for editing)
   useEffect(() => {
+    setSalaryError("") // Clear any previous errors
     if (initialData) {
       setFormData({
         companyName: initialData.company_name || "",
@@ -80,10 +82,16 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
         const min = parts[0].replace(/,/g, "")
         const max = parts[1].replace(/,/g, "")
 
-        // Format with commas and dollar signs
-        if (min && max) {
+        // Validate numbers
+        if (min && max && !isNaN(Number(min)) && !isNaN(Number(max))) {
+          if (Number(min) >= Number(max)) {
+            setSalaryError("Minimum salary must be less than maximum")
+            return value
+          }
+          setSalaryError("")
           return `$${Number(min).toLocaleString()} - $${Number(max).toLocaleString()}`
-        } else if (min) {
+        } else if (min && !isNaN(Number(min))) {
+          setSalaryError("")
           return `$${Number(min).toLocaleString()}`
         }
       }
@@ -91,21 +99,81 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
 
     // If no dash, just format as single value
     const num = cleaned.replace(/,/g, "")
-    if (num) {
+    if (num && !isNaN(Number(num))) {
+      setSalaryError("")
       return `$${Number(num).toLocaleString()}`
+    }
+
+    // If we get here and there's content, it's invalid
+    if (cleaned && cleaned.trim()) {
+      setSalaryError("Invalid format. Use: 50000-70000 or 60000")
+    } else {
+      setSalaryError("")
     }
 
     return cleaned
   }
 
+  const validateSalary = (value: string) => {
+    if (!value || value.trim() === "") {
+      setSalaryError("")
+      return true
+    }
+
+    // Check if it's already formatted
+    if (value.startsWith("$")) {
+      return true
+    }
+
+    // Remove all non-numeric characters except dash
+    const cleaned = value.replace(/[^\d\-]/g, "")
+
+    if (cleaned.includes("-")) {
+      const parts = cleaned.split("-")
+      if (parts.length !== 2) {
+        setSalaryError("Invalid format. Use: 50000-70000 or 60000")
+        return false
+      }
+
+      const min = parts[0].trim()
+      const max = parts[1].trim()
+
+      if (!min || !max || isNaN(Number(min)) || isNaN(Number(max))) {
+        setSalaryError("Both values must be numbers")
+        return false
+      }
+
+      if (Number(min) >= Number(max)) {
+        setSalaryError("Minimum must be less than maximum")
+        return false
+      }
+    } else {
+      if (cleaned && isNaN(Number(cleaned))) {
+        setSalaryError("Invalid number format")
+        return false
+      }
+    }
+
+    setSalaryError("")
+    return true
+  }
+
   const handleSalaryChange = (value: string) => {
-    // Allow user to type freely but store raw value
-    setFormData({ ...formData, salaryRange: value })
+    // Only allow numbers, dashes, commas, spaces, and dollar signs
+    const filtered = value.replace(/[^\d,\-\s$]/g, "")
+    setFormData({ ...formData, salaryRange: filtered })
+
+    // Validate in real-time if there's content
+    if (filtered && !filtered.startsWith("$")) {
+      validateSalary(filtered)
+    } else {
+      setSalaryError("")
+    }
   }
 
   const handleSalaryBlur = () => {
     // Format on blur
-    if (formData.salaryRange) {
+    if (formData.salaryRange && !formData.salaryRange.startsWith("$")) {
       const formatted = formatSalaryInput(formData.salaryRange)
       setFormData({ ...formData, salaryRange: formatted })
     }
@@ -213,9 +281,13 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
                 value={formData.salaryRange}
                 onChange={(e) => handleSalaryChange(e.target.value)}
                 onBlur={handleSalaryBlur}
-                className="text-sm h-9"
+                className={`text-sm h-9 ${salaryError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
               />
-              <p className="text-xs text-muted-foreground">Enter like: 50000-70000 or 60000</p>
+              {salaryError ? (
+                <p className="text-xs text-red-600">{salaryError}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">Enter like: 50000-70000 or 60000</p>
+              )}
             </div>
           </div>
 
@@ -309,7 +381,7 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto h-9">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="w-full sm:w-auto h-9">
+            <Button type="submit" disabled={loading || salaryError !== ""} className="w-full sm:w-auto h-9">
               {loading ? "Saving..." : initialData ? "Update" : "Add Application"}
             </Button>
           </div>
