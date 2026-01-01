@@ -204,7 +204,8 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
                 required
                 value={formData.applicationDate}
                 onChange={(e) => setFormData({ ...formData, applicationDate: e.target.value })}
-                className="text-sm h-9 max-w-full"
+                className="text-sm h-9 w-full [&::-webkit-calendar-picker-indicator]:opacity-100"
+                style={{ minWidth: 0 }}
               />
             </div>
           </div>
@@ -240,7 +241,8 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
               type="date"
               value={formData.followUpDate}
               onChange={(e) => setFormData({ ...formData, followUpDate: e.target.value })}
-              className="text-sm h-9 max-w-full"
+              className="text-sm h-9 w-full [&::-webkit-calendar-picker-indicator]:opacity-100"
+              style={{ minWidth: 0 }}
             />
           </div>
 
