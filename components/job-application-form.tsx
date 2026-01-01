@@ -204,7 +204,7 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
                 required
                 value={formData.applicationDate}
                 onChange={(e) => setFormData({ ...formData, applicationDate: e.target.value })}
-                className="text-sm h-9"
+                className="text-sm h-9 max-w-full"
               />
             </div>
           </div>
@@ -240,7 +240,7 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
               type="date"
               value={formData.followUpDate}
               onChange={(e) => setFormData({ ...formData, followUpDate: e.target.value })}
-              className="text-sm h-9"
+              className="text-sm h-9 max-w-full"
             />
           </div>
 

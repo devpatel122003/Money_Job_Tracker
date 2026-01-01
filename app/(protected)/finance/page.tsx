@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Plus,
   TrendingUp,
@@ -22,6 +23,7 @@ import { IncomeForm } from "@/components/income-form"
 import { ExpenseForm } from "@/components/expense-form"
 import { BudgetForm } from "@/components/budget-form"
 import { SavingsGoalForm } from "@/components/savings-goal-form"
+import { PlannedExpenseForm } from "@/components/planned-expense-form"
 import { ExpenseCategoryChart } from "@/components/expense-category-chart"
 import { IncomeVsExpensesChart } from "@/components/income-vs-expenses-chart"
 
@@ -32,22 +34,27 @@ export default function FinancePage() {
   const [expenses, setExpenses] = useState<any[]>([])
   const [budgets, setBudgets] = useState<any[]>([])
   const [savingsGoals, setSavingsGoals] = useState<any[]>([])
+  const [plannedExpenses, setPlannedExpenses] = useState<any[]>([])
+  const [allPlannedExpenses, setAllPlannedExpenses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showIncomeForm, setShowIncomeForm] = useState(false)
   const [showExpenseForm, setShowExpenseForm] = useState(false)
   const [showBudgetForm, setShowBudgetForm] = useState(false)
   const [showSavingsGoalForm, setShowSavingsGoalForm] = useState(false)
+  const [showPlannedExpenseForm, setShowPlannedExpenseForm] = useState(false)
 
   const fetchData = async () => {
     try {
       const monthStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, "0")}`
 
-      const [summaryRes, incomeRes, expensesRes, budgetsRes, savingsRes] = await Promise.all([
+      const [summaryRes, incomeRes, expensesRes, budgetsRes, savingsRes, plannedRes, allPlannedRes] = await Promise.all([
         fetch(`/api/finance/summary?month=${monthStr}`),
         fetch(`/api/finance/income?month=${monthStr}`),
         fetch(`/api/finance/expenses?month=${monthStr}`),
         fetch(`/api/finance/budgets?month=${monthStr}`),
         fetch(`/api/finance/savings-goals`),
+        fetch(`/api/finance/planned-expenses?month=${monthStr}`),
+        fetch(`/api/finance/planned-expenses`),
       ])
 
       const summaryData = await summaryRes.json()
@@ -55,12 +62,16 @@ export default function FinancePage() {
       const expensesData = await expensesRes.json()
       const budgetsData = await budgetsRes.json()
       const savingsData = await savingsRes.json()
+      const plannedData = await plannedRes.json()
+      const allPlannedData = await allPlannedRes.json()
 
       setSummary(summaryData)
       setIncome(Array.isArray(incomeData) ? incomeData : [])
       setExpenses(Array.isArray(expensesData) ? expensesData : [])
       setBudgets(Array.isArray(budgetsData) ? budgetsData : [])
       setSavingsGoals(Array.isArray(savingsData) ? savingsData : [])
+      setPlannedExpenses(Array.isArray(plannedData) ? plannedData : [])
+      setAllPlannedExpenses(Array.isArray(allPlannedData) ? allPlannedData : [])
     } catch (error) {
       console.error("[v0] Error fetching finance data:", error)
       setSummary(null)
@@ -68,6 +79,8 @@ export default function FinancePage() {
       setExpenses([])
       setBudgets([])
       setSavingsGoals([])
+      setPlannedExpenses([])
+      setAllPlannedExpenses([])
     } finally {
       setLoading(false)
     }
@@ -123,6 +136,30 @@ export default function FinancePage() {
     }
   }
 
+  const handleDeletePlannedExpense = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this planned expense?")) return
+
+    try {
+      await fetch(`/api/finance/planned-expenses/${id}`, { method: "DELETE" })
+      fetchData()
+    } catch (error) {
+      console.error("Error deleting planned expense:", error)
+    }
+  }
+
+  const handleTogglePlannedExpensePaid = async (id: number, isPaid: boolean) => {
+    try {
+      await fetch(`/api/finance/planned-expenses/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_paid: isPaid }),
+      })
+      fetchData()
+    } catch (error) {
+      console.error("Error updating planned expense:", error)
+    }
+  }
+
   const changeMonth = (direction: number) => {
     const newMonth = new Date(currentMonth)
     newMonth.setMonth(newMonth.getMonth() + direction)
@@ -154,6 +191,13 @@ export default function FinancePage() {
       isNearLimit: percentage >= 80 && percentage < 100,
     }
   })
+
+  // Calculate overall balance across all months (including planned expenses)
+  const totalPlannedUnpaid = allPlannedExpenses
+    .filter((exp) => !exp.is_paid)
+    .reduce((sum, exp) => sum + Number(exp.amount), 0)
+
+  const overallBalance = (summary?.balance || 0) - totalPlannedUnpaid
 
   // Calculate total savings progress
   const totalSavings = summary?.balance || 0
@@ -211,7 +255,7 @@ export default function FinancePage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Card className="border-green-200 bg-gradient-to-br from-green-50 to-white">
             <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
               <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
@@ -246,8 +290,8 @@ export default function FinancePage() {
             <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
               <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
                 <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
-                <span className="hidden xs:inline">Net Balance</span>
-                <span className="xs:hidden">Balance</span>
+                <span className="hidden xs:inline">Month Balance</span>
+                <span className="xs:hidden">Month</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
@@ -256,6 +300,26 @@ export default function FinancePage() {
               </div>
               <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">
                 {summary?.balance >= 0 ? "Surplus" : "Deficit"}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card
+            className={`border-indigo-200 bg-gradient-to-br ${overallBalance >= 0 ? "from-indigo-50" : "from-red-50"} to-white`}
+          >
+            <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
+                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-600" />
+                <span className="hidden xs:inline">Overall Balance</span>
+                <span className="xs:hidden">Overall</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <div className={`text-xl sm:text-2xl md:text-3xl font-bold ${overallBalance >= 0 ? "text-indigo-600" : "text-red-600"}`}>
+                ${overallBalance.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">
+                After planned
               </p>
             </CardContent>
           </Card>
@@ -302,16 +366,17 @@ export default function FinancePage() {
             </CardHeader>
             <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
               <div className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-600">
-                ${budgets.reduce((sum, budget) => sum + Number(budget.monthly_limit), 0).toFixed(2)}
+                ${totalPlannedUnpaid.toFixed(2)}
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">Budget total</p>
+              <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">{allPlannedExpenses.filter(e => !e.is_paid).length} unpaid</p>
             </CardContent>
           </Card>
         </div>
 
         <Tabs defaultValue="transactions" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 h-auto">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-1 h-auto">
             <TabsTrigger value="transactions" className="text-xs sm:text-sm py-2">Transactions</TabsTrigger>
+            <TabsTrigger value="planned" className="text-xs sm:text-sm py-2">Planned</TabsTrigger>
             <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">Overview</TabsTrigger>
             <TabsTrigger value="budgets" className="text-xs sm:text-sm py-2">Budgets</TabsTrigger>
             <TabsTrigger value="savings" className="text-xs sm:text-sm py-2">Savings</TabsTrigger>
@@ -602,6 +667,126 @@ export default function FinancePage() {
               </Card>
             </div>
           </TabsContent>
+
+          {/* Planned Expenses Tab */}
+          <TabsContent value="planned" className="space-y-4 sm:space-y-6">
+            <Card>
+              <CardHeader className="flex flex-col xs:flex-row items-start xs:items-center justify-between pb-3 p-4 sm:p-6 gap-3">
+                <CardTitle className="text-lg sm:text-xl">Planned Expenses</CardTitle>
+                <Button onClick={() => setShowPlannedExpenseForm(true)} size="sm" className="bg-orange-600 hover:bg-orange-700 w-full xs:w-auto">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Planned
+                </Button>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6 pt-0">
+                {plannedExpenses.length === 0 ? (
+                  <p className="text-center text-sm sm:text-base text-muted-foreground py-6 sm:py-8">
+                    No planned expenses for {formatMonth(currentMonth)}
+                  </p>
+                ) : (
+                  <div className="space-y-2 sm:space-y-3 max-h-[500px] overflow-y-auto">
+                    {plannedExpenses.map((item) => (
+                      <div
+                        key={item.id}
+                        className={`flex items-start sm:items-center justify-between p-2 sm:p-3 rounded-lg gap-2 ${item.is_paid ? "bg-gray-100 opacity-60" : "bg-orange-50"
+                          }`}
+                      >
+                        <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
+                          <Checkbox
+                            checked={item.is_paid}
+                            onCheckedChange={(checked) => handleTogglePlannedExpensePaid(item.id, checked === true)}
+                            className="mt-1"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className={`font-medium truncate text-sm sm:text-base ${item.is_paid ? "line-through" : ""}`}>
+                              {item.title}
+                            </div>
+                            <div className="text-xs sm:text-sm text-muted-foreground">
+                              {new Date(item.planned_date).toLocaleDateString()} • {item.category}
+                            </div>
+                            {item.description && (
+                              <div className="text-xs text-muted-foreground mt-1">{item.description}</div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                          <div className={`text-base sm:text-lg font-semibold text-right ${item.is_paid ? "text-gray-500" : "text-orange-600"}`}>
+                            ${Number(item.amount).toFixed(2)}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeletePlannedExpense(item.id)}
+                            className="h-7 w-7 sm:h-8 sm:w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* All Planned Expenses Across Months */}
+            <Card>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl">All Planned Expenses</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6 pt-0">
+                {allPlannedExpenses.length === 0 ? (
+                  <p className="text-center text-sm sm:text-base text-muted-foreground py-6 sm:py-8">
+                    No planned expenses
+                  </p>
+                ) : (
+                  <div className="space-y-2 sm:space-y-3 max-h-[400px] overflow-y-auto">
+                    {allPlannedExpenses
+                      .sort((a, b) => new Date(a.planned_date).getTime() - new Date(b.planned_date).getTime())
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          className={`flex items-start sm:items-center justify-between p-2 sm:p-3 rounded-lg gap-2 ${item.is_paid ? "bg-gray-100 opacity-60" : "bg-orange-50"
+                            }`}
+                        >
+                          <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
+                            <Checkbox
+                              checked={item.is_paid}
+                              onCheckedChange={(checked) => handleTogglePlannedExpensePaid(item.id, checked === true)}
+                              className="mt-1"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className={`font-medium truncate text-sm sm:text-base ${item.is_paid ? "line-through" : ""}`}>
+                                {item.title}
+                              </div>
+                              <div className="text-xs sm:text-sm text-muted-foreground">
+                                {new Date(item.planned_date).toLocaleDateString()} • {item.category}
+                              </div>
+                              {item.description && (
+                                <div className="text-xs text-muted-foreground mt-1">{item.description}</div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                            <div className={`text-base sm:text-lg font-semibold text-right ${item.is_paid ? "text-gray-500" : "text-orange-600"}`}>
+                              ${Number(item.amount).toFixed(2)}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeletePlannedExpense(item.id)}
+                              className="h-7 w-7 sm:h-8 sm:w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
 
         {/* Forms */}
@@ -636,6 +821,14 @@ export default function FinancePage() {
           onSuccess={() => {
             fetchData()
             setShowSavingsGoalForm(false)
+          }}
+        />
+        <PlannedExpenseForm
+          open={showPlannedExpenseForm}
+          onOpenChange={setShowPlannedExpenseForm}
+          onSuccess={() => {
+            fetchData()
+            setShowPlannedExpenseForm(false)
           }}
         />
       </div>
