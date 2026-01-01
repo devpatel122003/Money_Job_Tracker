@@ -49,11 +49,30 @@ export default function FinancePage() {
   const [budgets, setBudgets] = useState<any[]>([])
   const [allPlannedExpenses, setAllPlannedExpenses] = useState<any[]>([])
 
-  // Helper function to parse date string without timezone conversion
-  // Parses "YYYY-MM-DD" as local date instead of UTC
-  const parseLocalDate = (dateString: string) => {
-    const [year, month, day] = dateString.split('-').map(Number)
-    return new Date(year, month - 1, day)
+  // Helper function to format date strings without timezone conversion
+  // Takes "YYYY-MM-DD" or ISO date string and formats it for display
+  const formatLocalDate = (dateValue: any, options?: Intl.DateTimeFormatOptions) => {
+    if (!dateValue) return 'Invalid Date'
+
+    let dateStr = dateValue
+
+    // If it's a Date object, convert to YYYY-MM-DD
+    if (dateValue instanceof Date) {
+      dateStr = dateValue.toISOString().split('T')[0]
+    }
+    // If it's an ISO string with time, extract just the date part
+    else if (typeof dateValue === 'string' && dateValue.includes('T')) {
+      dateStr = dateValue.split('T')[0]
+    }
+
+    // Now we have YYYY-MM-DD, parse it as local date
+    const [year, month, day] = String(dateStr).split('-').map(Number)
+
+    if (!year || !month || !day) return 'Invalid Date'
+
+    const localDate = new Date(year, month - 1, day)
+
+    return localDate.toLocaleDateString('en-US', options || {})
   }
   const [loading, setLoading] = useState(true)
   const [showIncomeForm, setShowIncomeForm] = useState(false)
@@ -256,7 +275,7 @@ export default function FinancePage() {
 
   // Group planned expenses by month
   const plannedByMonth = allPlannedExpenses.reduce((acc: any, expense: any) => {
-    const month = parseLocalDate(expense.planned_date).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    const month = formatLocalDate(expense.planned_date, { month: "long", year: "numeric" })
     if (!acc[month]) {
       acc[month] = []
     }
@@ -489,7 +508,7 @@ export default function FinancePage() {
                         <div className="flex-1 min-w-0">
                           <div className="font-medium truncate">{item.source}</div>
                           <div className="text-sm text-muted-foreground">
-                            {parseLocalDate(item.income_date).toLocaleDateString()} • {item.category}
+                            {formatLocalDate(item.income_date)} • {item.category}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -531,7 +550,7 @@ export default function FinancePage() {
                         <div className="flex-1 min-w-0">
                           <div className="font-medium truncate">{item.merchant || item.category}</div>
                           <div className="text-sm text-muted-foreground">
-                            {parseLocalDate(item.expense_date).toLocaleDateString()} • {item.category}
+                            {formatLocalDate(item.expense_date)} • {item.category}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -589,7 +608,7 @@ export default function FinancePage() {
                             <div className="flex-1 min-w-0">
                               <div className="font-medium truncate">{item.title}</div>
                               <div className="text-sm text-muted-foreground">
-                                {parseLocalDate(item.planned_date).toLocaleDateString('en-US', {
+                                {formatLocalDate(item.planned_date, {
                                   weekday: 'short',
                                   month: 'short',
                                   day: 'numeric'
