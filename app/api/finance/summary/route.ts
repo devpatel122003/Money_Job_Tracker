@@ -99,12 +99,15 @@ export async function GET(request: Request) {
     })
 
     // Calculate allocations for ACTIVE goals only
+    // This is what gets deducted from available balance
     activeSavingsGoals.forEach((goal: any) => {
       if (goal.frequency === 'monthly' && goal.allocation_type === 'fixed') {
         monthlySavingsAllocation += Number(goal.allocation_value || 0)
       } else if (goal.frequency === 'monthly' && goal.allocation_type === 'percentage') {
+        // Use monthly income for percentage calculation
         monthlySavingsAllocation += (monthlyIncome * Number(goal.allocation_value || 0)) / 100
       } else if (goal.frequency === 'overall') {
+        // For overall goals, deduct the remaining amount needed
         const remaining = Number(goal.target_amount) - Number(goal.current_amount)
         if (remaining > 0) {
           overallSavingsAllocation += remaining
@@ -128,10 +131,15 @@ export async function GET(request: Request) {
     // Calculate balances
     const totalBalance = totalAllIncome - totalAllExpenses
 
-    // Available balance = Total balance - money already saved in goals - planned expenses
-    const availableBalance = totalBalance - totalCurrentlySaved - totalPlannedExpenses
+    // Available balance = Total balance - allocated savings - planned expenses
+    // This represents money that is truly free to spend
+    // Allocated savings includes:
+    //   - Money already saved (current_amount in goals)
+    //   - Money earmarked for active goals (allocations that haven't been saved yet)
+    const availableBalance = totalBalance - totalSavingsAllocation - totalPlannedExpenses
 
     // Overall balance = Total income - Total expenses - Future planned expenses (ORIGINAL LOGIC)
+    // This is for dashboard and doesn't include savings
     const overallBalance = totalAllIncome - totalAllExpenses - totalPlannedExpenses
 
     // Calculate overall progress percentage
@@ -144,13 +152,13 @@ export async function GET(request: Request) {
       monthlyExpenses,      // Expenses for selected month
       monthlyBalance: monthlyIncome - monthlyExpenses,  // Monthly balance
       totalBalance,         // Total income - total expenses (before any deductions)
-      totalSavingsAllocation,  // Total allocated to active savings goals
+      totalSavingsAllocation,  // Total allocated to active savings goals (deducted from balance)
       monthlySavingsAllocation,  // Monthly recurring savings
       overallSavingsAllocation,  // Overall goal savings still needed
       totalCurrentlySaved,  // Total amount saved across ALL goals
       totalTargetAmount,    // Total target across ALL goals
       overallProgressPercentage, // Overall progress across all goals
-      availableBalance,     // Free money after savings and planned expenses
+      availableBalance,     // Free money after ALLOCATIONS and planned expenses
       overallBalance,       // For dashboard: Income - Expenses - Planned (no savings)
       totalPlannedExpenses, // Total future planned expenses
       categoryExpenses,

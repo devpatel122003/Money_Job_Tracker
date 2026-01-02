@@ -845,13 +845,17 @@ export default function FinancePage() {
                   totalBalance={summary?.totalBalance || 0}
                   availableBalance={summary?.availableBalance || 0}
                   goals={savingsGoals}
-                  onManageClick={() => setShowSavingsSection(!showSavingsSection)}
+                  onManageClick={() => {
+                    // Scroll to goals list
+                    const element = document.getElementById('savings-goals-list')
+                    element?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }}
                 />
               </div>
             )}
 
             {/* Savings Goals List */}
-            <div>
+            <div id="savings-goals-list">
               <SavingsGoalsList
                 goals={savingsGoals}
                 onEdit={(goal) => {
