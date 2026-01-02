@@ -190,6 +190,14 @@ export function AuthForm() {
             </div>
           )}
 
+          {isLogin && (
+            <div className="text-right">
+              <a href="/forgot-password" className="text-sm text-primary hover:underline">
+                Forgot password?
+              </a>
+            </div>
+          )}
+
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
