@@ -6,11 +6,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card } from "@/components/ui/card"
 import { capitalizeText } from "@/lib/utils"
 import { toUTCDateString } from "@/lib/date-utils"
-import { Info, DollarSign, Percent } from "lucide-react"
+import { Info, DollarSign, Percent, Calendar as CalendarIcon, Repeat, Target as TargetIcon, Check } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface SavingsAllocationFormProps {
     open: boolean
@@ -36,7 +37,7 @@ export function SavingsAllocationForm({
         description: "",
         allocationType: "fixed" as "fixed" | "percentage",
         allocationValue: "",
-        frequency: "overall" as "monthly" | "overall",
+        frequency: "monthly" as "monthly" | "overall",
         color: "blue",
         priority: "0",
     })
@@ -51,7 +52,7 @@ export function SavingsAllocationForm({
                 description: editData.description || "",
                 allocationType: editData.allocation_type || "fixed",
                 allocationValue: editData.allocation_value || "",
-                frequency: editData.frequency || "overall",
+                frequency: editData.frequency || "monthly",
                 color: editData.color || "blue",
                 priority: String(editData.priority || 0),
             })
@@ -64,7 +65,7 @@ export function SavingsAllocationForm({
                 description: "",
                 allocationType: "fixed",
                 allocationValue: "",
-                frequency: "overall",
+                frequency: "monthly",
                 color: "blue",
                 priority: "0",
             })
@@ -151,7 +152,7 @@ export function SavingsAllocationForm({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>{editData ? "Edit Savings Goal" : "Create Savings Goal"}</DialogTitle>
+                    <DialogTitle className="text-2xl">{editData ? "Edit Savings Goal" : "Create Savings Goal"}</DialogTitle>
                     <DialogDescription>
                         Set up automatic savings allocation to reach your financial goals
                     </DialogDescription>
@@ -170,73 +171,145 @@ export function SavingsAllocationForm({
                         />
                     </div>
 
-                    {/* Frequency */}
+                    {/* Savings Type - Improved UI */}
                     <div className="space-y-3">
-                        <Label>Savings Type *</Label>
-                        <RadioGroup
-                            value={formData.frequency}
-                            onValueChange={(value: "monthly" | "overall") => setFormData({ ...formData, frequency: value })}
-                        >
-                            <div className="flex items-start space-x-2 border rounded-lg p-4 hover:bg-accent cursor-pointer">
-                                <RadioGroupItem value="monthly" id="monthly" />
-                                <div className="flex-1">
-                                    <Label htmlFor="monthly" className="cursor-pointer font-medium">
-                                        Monthly Recurring
-                                    </Label>
+                        <Label className="text-base font-semibold">Savings Type *</Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <Card
+                                className={cn(
+                                    "cursor-pointer transition-all hover:shadow-md",
+                                    formData.frequency === "monthly"
+                                        ? "ring-2 ring-blue-500 bg-blue-50 border-blue-300"
+                                        : "hover:border-blue-200"
+                                )}
+                                onClick={() => setFormData({ ...formData, frequency: "monthly" })}
+                            >
+                                <div className="p-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className={cn(
+                                                "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                                                formData.frequency === "monthly"
+                                                    ? "border-blue-500 bg-blue-500"
+                                                    : "border-gray-300"
+                                            )}>
+                                                {formData.frequency === "monthly" && (
+                                                    <Check className="h-3 w-3 text-white" />
+                                                )}
+                                            </div>
+                                            <Repeat className="h-5 w-5 text-blue-600" />
+                                        </div>
+                                    </div>
+                                    <h3 className="font-semibold mb-1">Monthly Recurring</h3>
                                     <p className="text-sm text-muted-foreground">
-                                        Automatically set aside money each month
+                                        Automatically set aside money each month from your income
                                     </p>
                                 </div>
-                            </div>
-                            <div className="flex items-start space-x-2 border rounded-lg p-4 hover:bg-accent cursor-pointer">
-                                <RadioGroupItem value="overall" id="overall" />
-                                <div className="flex-1">
-                                    <Label htmlFor="overall" className="cursor-pointer font-medium">
-                                        Overall Goal
-                                    </Label>
+                            </Card>
+
+                            <Card
+                                className={cn(
+                                    "cursor-pointer transition-all hover:shadow-md",
+                                    formData.frequency === "overall"
+                                        ? "ring-2 ring-purple-500 bg-purple-50 border-purple-300"
+                                        : "hover:border-purple-200"
+                                )}
+                                onClick={() => setFormData({ ...formData, frequency: "overall" })}
+                            >
+                                <div className="p-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className={cn(
+                                                "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                                                formData.frequency === "overall"
+                                                    ? "border-purple-500 bg-purple-500"
+                                                    : "border-gray-300"
+                                            )}>
+                                                {formData.frequency === "overall" && (
+                                                    <Check className="h-3 w-3 text-white" />
+                                                )}
+                                            </div>
+                                            <TargetIcon className="h-5 w-5 text-purple-600" />
+                                        </div>
+                                    </div>
+                                    <h3 className="font-semibold mb-1">Overall Goal</h3>
                                     <p className="text-sm text-muted-foreground">
-                                        One-time target amount to save towards
+                                        One-time target amount - contribute manually when ready
                                     </p>
                                 </div>
-                            </div>
-                        </RadioGroup>
+                            </Card>
+                        </div>
                     </div>
 
-                    {/* Allocation Type & Value - Only for Monthly */}
+                    {/* Allocation Method - Only for Monthly - Improved UI */}
                     {formData.frequency === "monthly" && (
                         <div className="space-y-3">
-                            <Label>Monthly Allocation Method *</Label>
-                            <RadioGroup
-                                value={formData.allocationType}
-                                onValueChange={(value: "fixed" | "percentage") =>
-                                    setFormData({ ...formData, allocationType: value, allocationValue: "" })
-                                }
-                            >
-                                <div className="flex items-start space-x-2 border rounded-lg p-4 hover:bg-accent cursor-pointer">
-                                    <RadioGroupItem value="fixed" id="fixed" />
-                                    <div className="flex-1">
-                                        <Label htmlFor="fixed" className="cursor-pointer font-medium flex items-center gap-2">
-                                            <DollarSign className="h-4 w-4" />
-                                            Fixed Amount
-                                        </Label>
+                            <Label className="text-base font-semibold">Monthly Allocation Method *</Label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <Card
+                                    className={cn(
+                                        "cursor-pointer transition-all hover:shadow-md",
+                                        formData.allocationType === "fixed"
+                                            ? "ring-2 ring-green-500 bg-green-50 border-green-300"
+                                            : "hover:border-green-200"
+                                    )}
+                                    onClick={() => setFormData({ ...formData, allocationType: "fixed", allocationValue: "" })}
+                                >
+                                    <div className="p-4">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <div className={cn(
+                                                    "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                                                    formData.allocationType === "fixed"
+                                                        ? "border-green-500 bg-green-500"
+                                                        : "border-gray-300"
+                                                )}>
+                                                    {formData.allocationType === "fixed" && (
+                                                        <Check className="h-3 w-3 text-white" />
+                                                    )}
+                                                </div>
+                                                <DollarSign className="h-5 w-5 text-green-600" />
+                                            </div>
+                                        </div>
+                                        <h3 className="font-semibold mb-1">Fixed Amount</h3>
                                         <p className="text-sm text-muted-foreground">
                                             Save a specific dollar amount each month
                                         </p>
                                     </div>
-                                </div>
-                                <div className="flex items-start space-x-2 border rounded-lg p-4 hover:bg-accent cursor-pointer">
-                                    <RadioGroupItem value="percentage" id="percentage" />
-                                    <div className="flex-1">
-                                        <Label htmlFor="percentage" className="cursor-pointer font-medium flex items-center gap-2">
-                                            <Percent className="h-4 w-4" />
-                                            Percentage of Income
-                                        </Label>
+                                </Card>
+
+                                <Card
+                                    className={cn(
+                                        "cursor-pointer transition-all hover:shadow-md",
+                                        formData.allocationType === "percentage"
+                                            ? "ring-2 ring-orange-500 bg-orange-50 border-orange-300"
+                                            : "hover:border-orange-200"
+                                    )}
+                                    onClick={() => setFormData({ ...formData, allocationType: "percentage", allocationValue: "" })}
+                                >
+                                    <div className="p-4">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <div className={cn(
+                                                    "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                                                    formData.allocationType === "percentage"
+                                                        ? "border-orange-500 bg-orange-500"
+                                                        : "border-gray-300"
+                                                )}>
+                                                    {formData.allocationType === "percentage" && (
+                                                        <Check className="h-3 w-3 text-white" />
+                                                    )}
+                                                </div>
+                                                <Percent className="h-5 w-5 text-orange-600" />
+                                            </div>
+                                        </div>
+                                        <h3 className="font-semibold mb-1">Percentage of Income</h3>
                                         <p className="text-sm text-muted-foreground">
                                             Save a percentage of your monthly income
                                         </p>
                                     </div>
-                                </div>
-                            </RadioGroup>
+                                </Card>
+                            </div>
 
                             <div className="space-y-2">
                                 <Label htmlFor="allocationValue">
@@ -261,7 +334,7 @@ export function SavingsAllocationForm({
                                             Monthly Allocation: ${calculateMonthlyAllocation().toFixed(2)}
                                         </p>
                                         {formData.allocationType === "percentage" && (
-                                            <p className="text-blue-700">
+                                            <p className="text-blue-700 text-xs mt-1">
                                                 Based on current monthly income of ${monthlyIncome.toFixed(2)}
                                             </p>
                                         )}
@@ -271,7 +344,7 @@ export function SavingsAllocationForm({
                         </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Target Amount */}
                         <div className="space-y-2">
                             <Label htmlFor="targetAmount">Target Amount ($) *</Label>
@@ -304,10 +377,10 @@ export function SavingsAllocationForm({
 
                     {/* Estimated Completion */}
                     {formData.frequency === "monthly" && estimatedMonths() && (
-                        <div className="bg-green-50 p-3 rounded-lg border border-green-200 flex items-start gap-2">
-                            <Info className="h-5 w-5 text-green-600 mt-0.5" />
+                        <div className="bg-green-50 p-4 rounded-lg border border-green-200 flex items-start gap-3">
+                            <Info className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                             <div>
-                                <p className="text-sm font-medium text-green-900">
+                                <p className="text-sm font-semibold text-green-900 mb-1">
                                     Estimated completion: {estimatedMonths()} months
                                 </p>
                                 <p className="text-sm text-green-700">
@@ -321,18 +394,21 @@ export function SavingsAllocationForm({
 
                     {/* Target Date */}
                     <div className="space-y-2">
-                        <Label htmlFor="targetDate">Target Date (Optional)</Label>
+                        <Label htmlFor="targetDate" className="flex items-center gap-2">
+                            <CalendarIcon className="h-4 w-4" />
+                            Target Date (Optional)
+                        </Label>
                         <Input
                             id="targetDate"
                             type="date"
                             value={formData.targetDate}
                             onChange={(e) => setFormData({ ...formData, targetDate: e.target.value })}
-                            className="max-w-[180px]"
+                            className="max-w-[200px]"
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        {/* Color */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Color Theme */}
                         <div className="space-y-2">
                             <Label htmlFor="color">Color Theme</Label>
                             <Select value={formData.color} onValueChange={(value) => setFormData({ ...formData, color: value })}>
@@ -343,7 +419,7 @@ export function SavingsAllocationForm({
                                     {colorOptions.map((color) => (
                                         <SelectItem key={color.value} value={color.value}>
                                             <div className="flex items-center gap-2">
-                                                <div className={`w-4 h-4 rounded ${color.class}`} />
+                                                <div className={`w-4 h-4 rounded-full ${color.class}`} />
                                                 {color.label}
                                             </div>
                                         </SelectItem>
@@ -380,11 +456,11 @@ export function SavingsAllocationForm({
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2 justify-end pt-4 border-t">
+                    <div className="flex gap-3 justify-end pt-4 border-t">
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+                        <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 min-w-[120px]">
                             {loading ? "Saving..." : editData ? "Update Goal" : "Create Goal"}
                         </Button>
                     </div>
