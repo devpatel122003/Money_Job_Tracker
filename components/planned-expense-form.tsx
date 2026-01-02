@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { capitalizeText } from "@/lib/utils"
+import { getLocalDateString, toUTCDateString } from "@/lib/date-utils"
 
 interface PlannedExpenseFormProps {
   open: boolean
@@ -22,7 +23,7 @@ export function PlannedExpenseForm({ open, onOpenChange, onSuccess }: PlannedExp
     title: "",
     category: "food",
     amount: "",
-    plannedDate: new Date().toISOString().split("T")[0],
+    plannedDate: getLocalDateString(),
     description: "",
   })
 
@@ -31,10 +32,16 @@ export function PlannedExpenseForm({ open, onOpenChange, onSuccess }: PlannedExp
     setLoading(true)
 
     try {
+      // Convert local date to UTC date string before sending to server
+      const dataToSend = {
+        ...formData,
+        plannedDate: toUTCDateString(formData.plannedDate),
+      }
+
       const response = await fetch("/api/finance/planned-expenses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       })
 
       if (response.ok) {
@@ -44,7 +51,7 @@ export function PlannedExpenseForm({ open, onOpenChange, onSuccess }: PlannedExp
           title: "",
           category: "food",
           amount: "",
-          plannedDate: new Date().toISOString().split("T")[0],
+          plannedDate: getLocalDateString(),
           description: "",
         })
       }

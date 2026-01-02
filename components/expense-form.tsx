@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 import { capitalizeText } from "@/lib/utils"
+import { getLocalDateString, toUTCDateString } from "@/lib/date-utils"
 
 interface ExpenseFormProps {
   open: boolean
@@ -22,7 +23,7 @@ export function ExpenseForm({ open, onOpenChange, onSuccess }: ExpenseFormProps)
   const [formData, setFormData] = useState({
     category: "food",
     amount: "",
-    expenseDate: new Date().toISOString().split("T")[0],
+    expenseDate: getLocalDateString(),
     description: "",
     merchant: "",
     isRecurring: false,
@@ -33,10 +34,16 @@ export function ExpenseForm({ open, onOpenChange, onSuccess }: ExpenseFormProps)
     setLoading(true)
 
     try {
+      // Convert local date to UTC date string before sending to server
+      const dataToSend = {
+        ...formData,
+        expenseDate: toUTCDateString(formData.expenseDate),
+      }
+
       const response = await fetch("/api/finance/expenses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       })
 
       if (response.ok) {
@@ -45,7 +52,7 @@ export function ExpenseForm({ open, onOpenChange, onSuccess }: ExpenseFormProps)
         setFormData({
           category: "food",
           amount: "",
-          expenseDate: new Date().toISOString().split("T")[0],
+          expenseDate: getLocalDateString(),
           description: "",
           merchant: "",
           isRecurring: false,

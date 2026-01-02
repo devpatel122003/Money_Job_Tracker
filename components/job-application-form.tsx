@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { capitalizeText } from "@/lib/utils"
+import { getLocalDateString, toUTCDateString, fromUTCToLocalDateString } from "@/lib/date-utils"
 
 interface JobApplicationFormProps {
   open: boolean
@@ -28,7 +29,7 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
     location: "",
     salaryRange: "",
     applicationStatus: "applied",
-    applicationDate: new Date().toISOString().split("T")[0],
+    applicationDate: getLocalDateString(),
     notes: "",
     contactName: "",
     contactEmail: "",
@@ -46,11 +47,15 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
         location: initialData.location || "",
         salaryRange: initialData.salary_range || "",
         applicationStatus: initialData.application_status || "applied",
-        applicationDate: initialData.application_date || new Date().toISOString().split("T")[0],
+        applicationDate: initialData.application_date
+          ? fromUTCToLocalDateString(initialData.application_date)
+          : getLocalDateString(),
         notes: initialData.notes || "",
         contactName: initialData.contact_name || "",
         contactEmail: initialData.contact_email || "",
-        followUpDate: initialData.follow_up_date || "",
+        followUpDate: initialData.follow_up_date
+          ? fromUTCToLocalDateString(initialData.follow_up_date)
+          : "",
       })
     } else {
       // Reset form when not editing
@@ -61,7 +66,7 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
         location: "",
         salaryRange: "",
         applicationStatus: "applied",
-        applicationDate: new Date().toISOString().split("T")[0],
+        applicationDate: getLocalDateString(),
         notes: "",
         contactName: "",
         contactEmail: "",
@@ -187,10 +192,17 @@ export function JobApplicationForm({ open, onOpenChange, onSuccess, initialData 
       const url = initialData ? `/api/applications/${initialData.id}` : "/api/applications"
       const method = initialData ? "PATCH" : "POST"
 
+      // Convert local dates to UTC date strings before sending to server
+      const dataToSend = {
+        ...formData,
+        applicationDate: toUTCDateString(formData.applicationDate),
+        followUpDate: formData.followUpDate ? toUTCDateString(formData.followUpDate) : "",
+      }
+
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       })
 
       if (response.ok) {

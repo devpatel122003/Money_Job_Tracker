@@ -45,10 +45,16 @@ export function ExpenseCategoryChart({ expenses }: ExpenseCategoryChartProps) {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data} layout="vertical">
+          <BarChart data={data} layout="vertical" margin={{ left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis type="number" />
-            <YAxis dataKey="category" type="category" width={100} />
+            <YAxis
+              dataKey="category"
+              type="category"
+              width={120}
+              tick={{ fontSize: 12 }}
+              interval={0}
+            />
             <Tooltip formatter={(value) => `$${value}`} />
             <Legend />
             <Bar dataKey="total" name="Amount ($)">

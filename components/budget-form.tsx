@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { toUTCDateString } from "@/lib/date-utils"
 
 interface BudgetFormProps {
   open: boolean
@@ -21,23 +22,25 @@ export function BudgetForm({ open, onOpenChange, onSuccess, currentMonth }: Budg
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!category) {
       alert("Please select a category")
       return
     }
-    
+
     if (!monthlyLimit || parseFloat(monthlyLimit) <= 0) {
       alert("Please enter a valid budget amount")
       return
     }
-    
+
     setLoading(true)
 
     try {
-      const startDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
-        .toISOString()
-        .split("T")[0]
+      // Get the first day of the current month and convert to UTC
+      const year = currentMonth.getFullYear()
+      const month = String(currentMonth.getMonth() + 1).padStart(2, '0')
+      const startDateString = `${year}-${month}-01`
+      const startDate = toUTCDateString(startDateString)
 
       const response = await fetch("/api/finance/budgets", {
         method: "POST",

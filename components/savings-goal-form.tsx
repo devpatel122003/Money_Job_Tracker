@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { capitalizeText } from "@/lib/utils"
+import { toUTCDateString } from "@/lib/date-utils"
 
 interface SavingsGoalFormProps {
   open: boolean
@@ -34,7 +35,7 @@ export function SavingsGoalForm({ open, onOpenChange, onSuccess }: SavingsGoalFo
           goal_name: goalName,
           target_amount: parseFloat(targetAmount),
           current_amount: currentAmount ? parseFloat(currentAmount) : 0,
-          target_date: targetDate || null,
+          target_date: targetDate ? toUTCDateString(targetDate) : null,
           description: description || null,
         }),
       })
