@@ -21,7 +21,7 @@ import {
   Home,
   CalendarRange,
   PieChart,
-  PiggyBank,  // ✅ ADDED
+  PiggyBank,
 } from "lucide-react"
 import { IncomeForm } from "@/components/income-form"
 import { ExpenseForm } from "@/components/expense-form"
@@ -29,7 +29,7 @@ import { BudgetForm } from "@/components/budget-form"
 import { PlannedExpenseForm } from "@/components/planned-expense-form"
 import { ExpenseCategoryChart } from "@/components/expense-category-chart"
 import { IncomeVsExpensesChart } from "@/components/income-vs-expenses-chart"
-import { SavingsAllocationForm } from "@/components/savings-allocation-form"  // ✅ ADDED
+import { SavingsAllocationForm } from "@/components/savings-allocation-form"
 import { SavingsOverviewCard } from "@/components/savings-overview-card"
 import { SavingsGoalsList } from "@/components/savings-goals-list"
 import { capitalizeText } from "@/lib/utils"
@@ -53,6 +53,8 @@ export default function FinancePage() {
   const [expenses, setExpenses] = useState<any[]>([])
   const [budgets, setBudgets] = useState<any[]>([])
   const [allPlannedExpenses, setAllPlannedExpenses] = useState<any[]>([])
+
+  // Savings state variables
   const [savingsGoals, setSavingsGoals] = useState<any[]>([])
   const [savingsSummary, setSavingsSummary] = useState<any>(null)
   const [showSavingsForm, setShowSavingsForm] = useState(false)
@@ -123,7 +125,6 @@ export default function FinancePage() {
       color: "text-purple-600",
       bgColor: "bg-purple-100",
     },
-    // ✅ ADDED - Savings navigation item
     {
       id: "savings",
       label: "Savings",
@@ -153,14 +154,13 @@ export default function FinancePage() {
     try {
       const monthStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, "0")}`
 
-      // ✅ ADDED savingsRes
       const [summaryRes, incomeRes, expensesRes, budgetsRes, plannedRes, savingsRes] = await Promise.all([
         fetch(`/api/finance/summary?month=${monthStr}`),
         fetch(`/api/finance/income?month=${monthStr}`),
         fetch(`/api/finance/expenses?month=${monthStr}`),
         fetch(`/api/finance/budgets?month=${monthStr}`),
         fetch(`/api/finance/planned-expenses`),
-        fetch(`/api/finance/savings-goals`),  // ✅ ADDED
+        fetch(`/api/finance/savings-goals`),
       ])
 
       const summaryData = await summaryRes.json()
@@ -168,15 +168,13 @@ export default function FinancePage() {
       const expensesData = await expensesRes.json()
       const budgetsData = await budgetsRes.json()
       const plannedData = await plannedRes.json()
-      const savingsData = await savingsRes.json()  // ✅ ADDED
+      const savingsData = await savingsRes.json()
 
       setSummary(summaryData)
       setIncome(Array.isArray(incomeData) ? incomeData : [])
       setExpenses(Array.isArray(expensesData) ? expensesData : [])
       setBudgets(Array.isArray(budgetsData) ? budgetsData : [])
       setAllPlannedExpenses(Array.isArray(plannedData) ? plannedData : [])
-
-      // ✅ ADDED - Set savings data
       setSavingsGoals(savingsData.goals || [])
       setSavingsSummary(savingsData.summary || null)
     } catch (error) {
@@ -186,7 +184,6 @@ export default function FinancePage() {
       setExpenses([])
       setBudgets([])
       setAllPlannedExpenses([])
-      // ✅ ADDED - Reset savings data on error
       setSavingsGoals([])
       setSavingsSummary(null)
     } finally {
@@ -463,7 +460,6 @@ export default function FinancePage() {
                 </CardContent>
               </Card>
 
-              {/* ✅ CHANGED - Show Available Balance instead of Overall Balance */}
               <Card className={`border-indigo-200 bg-gradient-to-br ${(summary?.availableBalance ?? summary?.totalBalance ?? 0) >= 0 ? "from-indigo-50" : "from-red-50"
                 } to-white`}>
                 <CardHeader className="pb-2 p-4">
@@ -493,7 +489,7 @@ export default function FinancePage() {
               <IncomeVsExpensesChart income={income} expenses={expenses} />
             </div>
 
-            {/* ✅ ADDED - Savings Overview Section */}
+            {/* Savings Overview */}
             {savingsSummary && savingsSummary.active_goals > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 <SavingsOverviewCard
@@ -507,7 +503,7 @@ export default function FinancePage() {
             )}
 
             {/* Budget Overview */}
-            {budgetProgress.length > 0 && ((
+            {budgetProgress.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
@@ -543,84 +539,6 @@ export default function FinancePage() {
                 </CardContent>
               </Card>
             )}
-
-            {/* ✅ ADDED - Savings View */}
-            {currentView === "savings" && (
-              <div className="space-y-6">
-                {/* Savings Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-2xl font-bold flex items-center gap-2">
-                      <PiggyBank className="h-6 w-6 text-blue-600" />
-                      Savings Goals
-                    </h2>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Allocate money toward your financial goals
-                    </p>
-                  </div>
-                  <Button
-                    onClick={() => {
-                      setEditingSavingsGoal(null)
-                      setShowSavingsForm(true)
-                    }}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Savings Goal
-                  </Button>
-                </div>
-
-                {/* Savings Overview Card */}
-                {savingsSummary && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    <SavingsOverviewCard
-                      summary={savingsSummary}
-                      totalBalance={summary?.totalBalance || 0}
-                      availableBalance={summary?.availableBalance || 0}
-                      goals={savingsGoals}
-                      onManageClick={() => setShowSavingsSection(!showSavingsSection)}
-                    />
-                  </div>
-                )}
-
-                {/* Savings Goals List */}
-                <div>
-                  <SavingsGoalsList
-                    goals={savingsGoals}
-                    onEdit={(goal) => {
-                      setEditingSavingsGoal(goal)
-                      setShowSavingsForm(true)
-                    }}
-                    onRefresh={fetchData}
-                  />
-                </div>
-
-                {/* Empty State */}
-                {savingsGoals.length === 0 && (
-                  <Card className="border-dashed border-2">
-                    <CardContent className="py-12 text-center">
-                      <PiggyBank className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                      <h3 className="text-xl font-semibold mb-2">No Savings Goals Yet</h3>
-                      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                        Start building your financial future by creating your first savings goal.
-                        Choose between monthly recurring allocations or one-time targets.
-                      </p>
-                      <Button
-                        onClick={() => {
-                          setEditingSavingsGoal(null)
-                          setShowSavingsForm(true)
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create Your First Goal
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-
           </div>
         )}
 
@@ -873,6 +791,83 @@ export default function FinancePage() {
           </div>
         )}
 
+        {/* Savings View */}
+        {currentView === "savings" && (
+          <div className="space-y-6">
+            {/* Savings Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <PiggyBank className="h-6 w-6 text-blue-600" />
+                  Savings Goals
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Allocate money toward your financial goals
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  setEditingSavingsGoal(null)
+                  setShowSavingsForm(true)
+                }}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Savings Goal
+              </Button>
+            </div>
+
+            {/* Savings Overview Card */}
+            {savingsSummary && (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <SavingsOverviewCard
+                  summary={savingsSummary}
+                  totalBalance={summary?.totalBalance || 0}
+                  availableBalance={summary?.availableBalance || 0}
+                  goals={savingsGoals}
+                  onManageClick={() => setShowSavingsSection(!showSavingsSection)}
+                />
+              </div>
+            )}
+
+            {/* Savings Goals List */}
+            <div>
+              <SavingsGoalsList
+                goals={savingsGoals}
+                onEdit={(goal) => {
+                  setEditingSavingsGoal(goal)
+                  setShowSavingsForm(true)
+                }}
+                onRefresh={fetchData}
+              />
+            </div>
+
+            {/* Empty State */}
+            {savingsGoals.length === 0 && (
+              <Card className="border-dashed border-2">
+                <CardContent className="py-12 text-center">
+                  <PiggyBank className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                  <h3 className="text-xl font-semibold mb-2">No Savings Goals Yet</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    Start building your financial future by creating your first savings goal.
+                    Choose between monthly recurring allocations or one-time targets.
+                  </p>
+                  <Button
+                    onClick={() => {
+                      setEditingSavingsGoal(null)
+                      setShowSavingsForm(true)
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Your First Goal
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
         {/* Forms */}
         <IncomeForm
           open={showIncomeForm}
@@ -907,7 +902,6 @@ export default function FinancePage() {
             setShowPlannedExpenseForm(false)
           }}
         />
-        {/* ✅ ADDED - Savings Form Dialog */}
         <SavingsAllocationForm
           open={showSavingsForm}
           onOpenChange={(open) => {
