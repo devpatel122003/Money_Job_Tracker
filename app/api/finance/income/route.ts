@@ -1,6 +1,7 @@
 import { sql } from "@/lib/db"
 import { NextResponse } from "next/server"
 import { getUserSession } from "@/lib/auth"
+import { autoContributeToSavings } from "@/lib/savings-utils"
 
 export async function GET(request: Request) {
   try {
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
         ? Number.parseFloat(hourlyRate) * Number.parseFloat(hoursWorked)
         : Number.parseFloat(amount)
 
+    // Insert income
     const result = await sql`
       INSERT INTO income (
         user_id, source, amount, income_date, category, description, 
@@ -69,6 +71,11 @@ export async function POST(request: Request) {
       )
       RETURNING *
     `
+
+    // Auto-contribute to savings goals
+    // This happens asynchronously so income creation doesn't fail if savings fails
+    autoContributeToSavings(user.id, finalAmount, incomeDate)
+      .catch(err => console.error("Failed to auto-contribute to savings:", err))
 
     return NextResponse.json(result[0])
   } catch (error) {

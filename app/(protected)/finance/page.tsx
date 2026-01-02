@@ -626,6 +626,26 @@ export default function FinancePage() {
                     ))}
                   </div>
                 )}
+
+                {/* Savings Allocation Display */}
+                {savingsSummary && savingsSummary.total_monthly_allocation > 0 && (
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex-1">
+                        <div className="font-medium flex items-center gap-2">
+                          <PiggyBank className="h-4 w-4 text-blue-600" />
+                          Savings Allocation
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {savingsSummary.active_goals} active goal{savingsSummary.active_goals !== 1 ? 's' : ''}
+                        </div>
+                      </div>
+                      <div className="text-lg font-semibold text-blue-600">
+                        ${savingsSummary.total_monthly_allocation.toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

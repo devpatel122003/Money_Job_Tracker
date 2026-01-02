@@ -30,11 +30,14 @@ export function ExpenseCategoryChart({ expenses }: ExpenseCategoryChartProps) {
   )
 
   const data = Object.entries(categoryTotals)
-    .map(([category, total]) => ({
-      category: category.charAt(0).toUpperCase() + category.slice(1),
-      total: Number(total.toFixed(2)),
-      color: CATEGORY_COLORS[category] || "#6b7280",
-    }))
+    .map(([category, total]) => {
+      const totalNumber = typeof total === "number" ? total : Number(total)
+      return {
+        category: category.charAt(0).toUpperCase() + category.slice(1),
+        total: Number(totalNumber.toFixed(2)),
+        color: CATEGORY_COLORS[category] || "#6b7280",
+      }
+    })
     .sort((a, b) => b.total - a.total)
 
   return (
