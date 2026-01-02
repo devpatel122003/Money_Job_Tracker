@@ -1,13 +1,8 @@
-import { getUserSession } from "@/lib/auth"
-import { redirect } from "next/navigation"
 import { ForgotPasswordForm } from "@/components/forgot-password-form"
 
 export default async function ForgotPasswordPage() {
-    const user = await getUserSession()
-
-    if (user) {
-        redirect("/")
-    }
+    // Remove the redirect check - allow access even if logged in
+    // Users might want to reset password while logged in
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 p-4">

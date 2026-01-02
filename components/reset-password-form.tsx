@@ -103,7 +103,7 @@ export function ResetPasswordForm() {
             return
         }
 
-        // Client-side validation (server will validate too)
+        // Client-side validation
         if (password.length < 8) {
             setError("Password must be at least 8 characters")
             setLoading(false)
@@ -126,9 +126,15 @@ export function ResetPasswordForm() {
 
             setSuccess(true)
 
+            // Log out the user (clear their session)
+            await fetch("/api/auth/logout", { method: "POST" }).catch(() => {
+                // Ignore logout errors
+            })
+
             // Redirect to login after 3 seconds
             setTimeout(() => {
                 router.push("/login")
+                router.refresh()
             }, 3000)
         } catch (err) {
             setError("Failed to connect. Please check your internet connection and try again.")
@@ -185,7 +191,7 @@ export function ResetPasswordForm() {
                     </div>
                     <CardTitle className="text-center">Password Reset Successful!</CardTitle>
                     <CardDescription className="text-center">
-                        Your password has been successfully reset. Redirecting to login...
+                        Your password has been successfully reset. You've been logged out for security. Redirecting to login...
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -304,7 +310,7 @@ export function ResetPasswordForm() {
 
                 <div className="mt-6 pt-6 border-t">
                     <p className="text-xs text-muted-foreground text-center">
-                        Make sure to use a password you haven't used before and keep it secure.
+                        After resetting, you'll be logged out and can log in with your new password.
                     </p>
                 </div>
             </CardContent>

@@ -1,13 +1,8 @@
-import { getUserSession } from "@/lib/auth"
-import { redirect } from "next/navigation"
 import { ResetPasswordForm } from "@/components/reset-password-form"
 
 export default async function ResetPasswordPage() {
-    const user = await getUserSession()
-
-    if (user) {
-        redirect("/")
-    }
+    // Remove the redirect check - users need to access this page from email link
+    // Even if they're logged in, they should be able to reset their password
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 p-4">
