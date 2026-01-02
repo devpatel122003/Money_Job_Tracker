@@ -14,6 +14,9 @@ interface SavingsOverviewCardProps {
         monthly_income: number
         active_goals: number
         completed_goals: number
+        total_currently_saved?: number
+        total_target_amount?: number
+        overall_progress_percentage?: number
     }
     totalBalance: number
     availableBalance: number
@@ -34,17 +37,20 @@ export function SavingsOverviewCard({
         ? ((summary.total_monthly_allocation / summary.monthly_income) * 100).toFixed(1)
         : "0"
 
-    const totalSavingsProgress = goals.reduce((sum, goal) => {
+    // Use summary values if available, otherwise calculate from goals
+    const totalSavingsProgress = summary.total_currently_saved ?? goals.reduce((sum, goal) => {
         return sum + Number(goal.current_amount || 0)
     }, 0)
 
-    const totalSavingsTarget = goals.reduce((sum, goal) => {
+    const totalSavingsTarget = summary.total_target_amount ?? goals.reduce((sum, goal) => {
         return sum + Number(goal.target_amount || 0)
     }, 0)
 
-    const overallProgress = totalSavingsTarget > 0
-        ? Math.min((totalSavingsProgress / totalSavingsTarget) * 100, 100)
-        : 0
+    const overallProgress = summary.overall_progress_percentage ?? (
+        totalSavingsTarget > 0
+            ? Math.min((totalSavingsProgress / totalSavingsTarget) * 100, 100)
+            : 0
+    )
 
     return (
         <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white">
@@ -82,7 +88,7 @@ export function SavingsOverviewCard({
                 </div>
 
                 {/* Savings Rate */}
-                {summary.monthly_income > 0 && (
+                {summary.monthly_income > 0 && summary.total_monthly_allocation > 0 && (
                     <div className="bg-white p-3 rounded-lg border border-purple-100">
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -106,11 +112,11 @@ export function SavingsOverviewCard({
                                 <Target className="h-4 w-4 text-orange-600" />
                                 <span className="text-sm font-medium">Overall Progress</span>
                             </div>
-                            <span className="text-sm font-bold text-orange-600">{overallProgress.toFixed(0)}%</span>
+                            <span className="text-sm font-bold text-orange-600">{overallProgress.toFixed(1)}%</span>
                         </div>
                         <Progress value={overallProgress} className="h-2" />
                         <p className="text-xs text-muted-foreground mt-1">
-                            ${totalSavingsProgress.toFixed(2)} of ${totalSavingsTarget.toFixed(2)}
+                            ${totalSavingsProgress.toFixed(2)} of ${totalSavingsTarget.toFixed(2)} total saved
                         </p>
                     </div>
                 )}
@@ -123,8 +129,12 @@ export function SavingsOverviewCard({
                             <span className="font-medium">${summary.total_monthly_allocation.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Overall Goals:</span>
+                            <span className="text-muted-foreground">Overall Goals Remaining:</span>
                             <span className="font-medium">${summary.total_overall_allocation.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Total Saved:</span>
+                            <span className="font-medium text-green-600">${totalSavingsProgress.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Active Goals:</span>

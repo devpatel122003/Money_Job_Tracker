@@ -76,7 +76,7 @@ export async function GET(request: Request) {
     const totalAllExpenses = Number(overallExpensesResult[0]?.total || 0)
     const totalPlannedExpenses = Number(plannedExpensesResult[0]?.total || 0)
 
-    // Get all savings goals (not just active) to calculate total saved
+    // Get all savings goals to calculate comprehensive progress
     const allSavingsGoals = await sql`
       SELECT * FROM savings_goals
       WHERE user_id = ${user.id}
@@ -87,14 +87,18 @@ export async function GET(request: Request) {
 
     let monthlySavingsAllocation = 0
     let overallSavingsAllocation = 0
-    let totalCurrentlySaved = 0
 
-    // Calculate how much is currently saved across all goals
+    // Calculate total across ALL goals (for overall progress)
+    let totalCurrentlySaved = 0
+    let totalTargetAmount = 0
+
+    // Calculate for ALL goals regardless of active status
     allSavingsGoals.forEach((goal: any) => {
       totalCurrentlySaved += Number(goal.current_amount || 0)
+      totalTargetAmount += Number(goal.target_amount || 0)
     })
 
-    // Calculate allocations for active goals only
+    // Calculate allocations for ACTIVE goals only
     activeSavingsGoals.forEach((goal: any) => {
       if (goal.frequency === 'monthly' && goal.allocation_type === 'fixed') {
         monthlySavingsAllocation += Number(goal.allocation_value || 0)
@@ -125,11 +129,15 @@ export async function GET(request: Request) {
     const totalBalance = totalAllIncome - totalAllExpenses
 
     // Available balance = Total balance - money already saved in goals - planned expenses
-    // This represents truly free money
     const availableBalance = totalBalance - totalCurrentlySaved - totalPlannedExpenses
 
     // Overall balance = Total income - Total expenses - Future planned expenses (ORIGINAL LOGIC)
     const overallBalance = totalAllIncome - totalAllExpenses - totalPlannedExpenses
+
+    // Calculate overall progress percentage
+    const overallProgressPercentage = totalTargetAmount > 0
+      ? Math.min((totalCurrentlySaved / totalTargetAmount) * 100, 100)
+      : 0
 
     return NextResponse.json({
       monthlyIncome,        // Income for selected month
@@ -139,12 +147,15 @@ export async function GET(request: Request) {
       totalSavingsAllocation,  // Total allocated to active savings goals
       monthlySavingsAllocation,  // Monthly recurring savings
       overallSavingsAllocation,  // Overall goal savings still needed
-      totalCurrentlySaved,  // Total amount already saved across all goals
+      totalCurrentlySaved,  // Total amount saved across ALL goals
+      totalTargetAmount,    // Total target across ALL goals
+      overallProgressPercentage, // Overall progress across all goals
       availableBalance,     // Free money after savings and planned expenses
-      overallBalance,       // KEPT FOR DASHBOARD: Income - Expenses - Planned (no savings deducted)
+      overallBalance,       // For dashboard: Income - Expenses - Planned (no savings)
       totalPlannedExpenses, // Total future planned expenses
       categoryExpenses,
       activeSavingsGoals: activeSavingsGoals.length,
+      totalSavingsGoals: allSavingsGoals.length,
     })
   } catch (error) {
     console.error("Error fetching summary:", error)

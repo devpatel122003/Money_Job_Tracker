@@ -71,7 +71,7 @@ export async function GET(request: Request) {
       }
     })
 
-    // Calculate total allocations
+    // Calculate total allocations for ACTIVE goals
     const totalMonthlyAllocation = enhancedGoals
       .filter((g: any) => g.frequency === 'monthly' && g.is_active)
       .reduce((sum: number, g: any) => sum + g.calculated_allocation, 0)
@@ -79,6 +79,17 @@ export async function GET(request: Request) {
     const totalOverallAllocation = enhancedGoals
       .filter((g: any) => g.frequency === 'overall' && g.is_active)
       .reduce((sum: number, g: any) => sum + g.calculated_allocation, 0)
+
+    // Calculate OVERALL progress across ALL goals (active or not)
+    const totalCurrentlySaved = enhancedGoals
+      .reduce((sum: number, g: any) => sum + Number(g.current_amount || 0), 0)
+
+    const totalTargetAmount = enhancedGoals
+      .reduce((sum: number, g: any) => sum + Number(g.target_amount || 0), 0)
+
+    const overallProgressPercentage = totalTargetAmount > 0
+      ? Math.min((totalCurrentlySaved / totalTargetAmount) * 100, 100)
+      : 0
 
     return NextResponse.json({
       goals: enhancedGoals,
@@ -88,7 +99,10 @@ export async function GET(request: Request) {
         total_allocation: totalMonthlyAllocation + totalOverallAllocation,
         monthly_income: monthlyIncome,
         active_goals: enhancedGoals.filter((g: any) => g.is_active).length,
-        completed_goals: enhancedGoals.filter((g: any) => g.is_completed).length
+        completed_goals: enhancedGoals.filter((g: any) => g.is_completed).length,
+        total_currently_saved: totalCurrentlySaved,
+        total_target_amount: totalTargetAmount,
+        overall_progress_percentage: Math.round(overallProgressPercentage * 10) / 10
       }
     })
   } catch (error) {
