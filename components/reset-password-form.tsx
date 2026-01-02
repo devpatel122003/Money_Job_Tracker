@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { Suspense, useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -72,7 +72,7 @@ function PasswordStrength({ password }: { password: string }) {
     )
 }
 
-export function ResetPasswordForm() {
+function ResetPasswordFormContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const token = searchParams.get("token")
@@ -96,14 +96,12 @@ export function ResetPasswordForm() {
         setLoading(true)
         setError("")
 
-        // Validate passwords match
         if (password !== confirmPassword) {
             setError("Passwords do not match")
             setLoading(false)
             return
         }
 
-        // Client-side validation
         if (password.length < 8) {
             setError("Password must be at least 8 characters")
             setLoading(false)
@@ -126,10 +124,8 @@ export function ResetPasswordForm() {
 
             setSuccess(true)
 
-            // Log out the user (clear their session)
-            await fetch("/api/auth/logout", { method: "POST" }).catch(() => {
-                // Ignore logout errors
-            })
+            // Log out the user
+            await fetch("/api/auth/logout", { method: "POST" }).catch(() => { })
 
             // Redirect to login after 3 seconds
             setTimeout(() => {
@@ -315,5 +311,20 @@ export function ResetPasswordForm() {
                 </div>
             </CardContent>
         </Card>
+    )
+}
+
+// Wrap the component that uses useSearchParams in Suspense
+export function ResetPasswordForm() {
+    return (
+        <Suspense fallback={
+            <Card className="w-full max-w-md">
+                <CardContent className="flex items-center justify-center p-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </CardContent>
+            </Card>
+        }>
+            <ResetPasswordFormContent />
+        </Suspense>
     )
 }
