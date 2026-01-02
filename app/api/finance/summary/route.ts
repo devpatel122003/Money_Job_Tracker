@@ -69,6 +69,13 @@ export async function GET(request: Request) {
       AND planned_date > ${today}
     `
 
+    // Calculate monthly values BEFORE using them
+    const monthlyIncome = Number(incomeResult[0]?.total || 0)
+    const monthlyExpenses = Number(expensesResult[0]?.total || 0)
+    const totalAllIncome = Number(overallIncomeResult[0]?.total || 0)
+    const totalAllExpenses = Number(overallExpensesResult[0]?.total || 0)
+    const totalPlannedExpenses = Number(plannedExpensesResult[0]?.total || 0)
+
     // Get active savings goals and calculate total allocations
     const savingsGoals = await sql`
       SELECT * FROM savings_goals
@@ -105,12 +112,6 @@ export async function GET(request: Request) {
       GROUP BY category
       ORDER BY total DESC
     `
-
-    const monthlyIncome = Number(incomeResult[0]?.total || 0)
-    const monthlyExpenses = Number(expensesResult[0]?.total || 0)
-    const totalAllIncome = Number(overallIncomeResult[0]?.total || 0)
-    const totalAllExpenses = Number(overallExpensesResult[0]?.total || 0)
-    const totalPlannedExpenses = Number(plannedExpensesResult[0]?.total || 0)
 
     // Calculate balances with savings consideration
     const totalBalance = totalAllIncome - totalAllExpenses

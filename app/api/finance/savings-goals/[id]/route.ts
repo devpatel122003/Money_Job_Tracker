@@ -34,11 +34,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const body = await request.json()
 
     // Handle different types of updates
-    const {
-      action, // 'contribute', 'update', 'toggle'
-      amount, // For contribute action
-      ...updateFields
-    } = body
+    const { action, amount, ...updateFields } = body
 
     if (action === 'contribute') {
       // Add to current_amount
@@ -70,34 +66,42 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return NextResponse.json(result[0])
     }
 
-    // General update - build dynamic query
-    const allowedFields = [
-      'goal_name', 'target_amount', 'current_amount', 'target_date', 'description',
-      'allocation_type', 'allocation_value', 'frequency', 'color', 'priority', 'is_active', 'is_completed'
-    ]
+    // General update - handle specific fields
+    const {
+      goal_name,
+      target_amount,
+      current_amount,
+      target_date,
+      description,
+      allocation_type,
+      allocation_value,
+      frequency,
+      color,
+      priority,
+      is_active,
+      is_completed
+    } = updateFields
 
-    const updates = Object.keys(updateFields)
-      .filter(key => allowedFields.includes(key))
-      .reduce((acc, key) => {
-        acc[key] = updateFields[key]
-        return acc
-      }, {} as any)
-
-    if (Object.keys(updates).length === 0) {
-      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 })
-    }
-
-    // Build the SET clause dynamically
-    const setClause = Object.keys(updates)
-      .map((key) => `${key} = $${key}`)
-      .join(', ')
-
+    // Build update query with all possible fields
     const result = await sql`
       UPDATE savings_goals 
-      SET ${sql.unsafe(setClause)}, updated_at = CURRENT_TIMESTAMP
+      SET 
+        goal_name = COALESCE(${goal_name}, goal_name),
+        target_amount = COALESCE(${target_amount}, target_amount),
+        current_amount = COALESCE(${current_amount}, current_amount),
+        target_date = COALESCE(${target_date}, target_date),
+        description = COALESCE(${description}, description),
+        allocation_type = COALESCE(${allocation_type}, allocation_type),
+        allocation_value = COALESCE(${allocation_value}, allocation_value),
+        frequency = COALESCE(${frequency}, frequency),
+        color = COALESCE(${color}, color),
+        priority = COALESCE(${priority}, priority),
+        is_active = COALESCE(${is_active}, is_active),
+        is_completed = COALESCE(${is_completed}, is_completed),
+        updated_at = CURRENT_TIMESTAMP
       WHERE id = ${parseInt(id)} AND user_id = ${user.id}
       RETURNING *
-    `.values(updates)
+    `
 
     if (!result || result.length === 0) {
       return NextResponse.json({ error: "Goal not found" }, { status: 404 })
