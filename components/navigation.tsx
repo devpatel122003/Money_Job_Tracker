@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Briefcase, DollarSign, Home, LogOut, Menu, X, User as UserIcon } from "lucide-react"
+import { Briefcase, DollarSign, Home, LogOut, Menu, X, User as UserIcon, HelpCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -21,6 +21,7 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/jobs", label: "Jobs", icon: Briefcase },
   { href: "/finance", label: "Finance", icon: DollarSign },
+  { href: "/how-it-works", label: "How It Works", icon: HelpCircle },
 ]
 
 interface NavigationProps {
