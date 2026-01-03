@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { TrendingUp, Target } from "lucide-react"
+import { TrendingUp, Target, Wallet } from "lucide-react"
 
 interface SavingsOverviewCardProps {
     summary: {
@@ -49,11 +49,12 @@ export function SavingsOverviewCard({
     )
 
     return (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {/* Total Allocated */}
             <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-200">
                 <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <Wallet className="h-4 w-4 text-blue-600" />
                         Total Allocated
                     </CardTitle>
                 </CardHeader>
@@ -63,23 +64,6 @@ export function SavingsOverviewCard({
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                         {summary.active_goals} active goal{summary.active_goals !== 1 ? 's' : ''}
-                    </p>
-                </CardContent>
-            </Card>
-
-            {/* Available Balance */}
-            <Card className="bg-gradient-to-br from-green-50 to-white border-green-200">
-                <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Available Balance
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className={`text-3xl font-bold ${availableBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ${availableBalance.toFixed(2)}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                        After savings & planned
                     </p>
                 </CardContent>
             </Card>
@@ -98,7 +82,7 @@ export function SavingsOverviewCard({
                             {savingsPercentage}%
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                            ${summary.total_monthly_allocation.toFixed(2)} monthly
+                            ${summary.total_monthly_allocation.toFixed(2)} of ${summary.monthly_income.toFixed(2)}
                         </p>
                         <Progress value={parseFloat(savingsPercentage)} className="h-2 mt-2" />
                     </CardContent>
