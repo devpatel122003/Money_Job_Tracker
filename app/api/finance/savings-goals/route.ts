@@ -47,19 +47,31 @@ export async function GET(request: Request) {
     const enhancedGoals = goals.map((goal: any) => {
       let calculatedAllocation = 0
 
-      // Only calculate allocation for ACTIVE goals
-      if (goal.is_active) {
-        if (goal.allocation_type === 'percentage' && goal.frequency === 'monthly') {
-          calculatedAllocation = (monthlyIncome * Number(goal.allocation_value)) / 100
-        } else if (goal.allocation_type === 'fixed' && goal.frequency === 'monthly') {
-          calculatedAllocation = Number(goal.allocation_value)
+      // Only calculate allocation for ACTIVE and INCOMPLETE goals
+      if (goal.is_active && !goal.is_completed) {
+        if (goal.frequency === 'monthly') {
+          // Monthly goals: use their specified allocation
+          if (goal.allocation_type === 'percentage') {
+            calculatedAllocation = (monthlyIncome * Number(goal.allocation_value)) / 100
+          } else if (goal.allocation_type === 'fixed') {
+            calculatedAllocation = Number(goal.allocation_value)
+          }
         } else if (goal.frequency === 'overall') {
-          // For overall goals, allocation is how much is still needed
-          const remaining = Number(goal.target_amount) - Number(goal.current_amount)
-          calculatedAllocation = remaining > 0 ? remaining : 0
+          // Overall goals: NEW LOGIC - they also benefit from income
+          if (goal.allocation_type === 'percentage' && goal.allocation_value) {
+            calculatedAllocation = (monthlyIncome * Number(goal.allocation_value)) / 100
+          } else if (goal.allocation_type === 'fixed' && goal.allocation_value) {
+            calculatedAllocation = Number(goal.allocation_value)
+          } else {
+            // Default 5% per income for overall goals without specific allocation
+            const remaining = Number(goal.target_amount) - Number(goal.current_amount)
+            if (remaining > 0) {
+              calculatedAllocation = Math.min((monthlyIncome * 5) / 100, remaining)
+            }
+          }
         }
       }
-      // If paused (is_active = false), calculatedAllocation stays 0
+      // If paused (is_active = false) or completed, calculatedAllocation stays 0
 
       // Progress calculation uses current_amount regardless of active status
       const progress = goal.target_amount > 0
@@ -68,22 +80,22 @@ export async function GET(request: Request) {
 
       return {
         ...goal,
-        calculated_allocation: calculatedAllocation,  // 0 if paused
+        calculated_allocation: calculatedAllocation,  // 0 if paused or completed
         progress: Math.round(progress * 10) / 10,  // Based on current_amount (works when paused)
         remaining: Math.max(Number(goal.target_amount) - Number(goal.current_amount), 0)
       }
     })
 
-    // Calculate total allocations for ACTIVE goals only
+    // Calculate total allocations for ACTIVE and INCOMPLETE goals only
     const totalMonthlyAllocation = enhancedGoals
-      .filter((g: any) => g.frequency === 'monthly' && g.is_active)
+      .filter((g: any) => g.frequency === 'monthly' && g.is_active && !g.is_completed)
       .reduce((sum: number, g: any) => sum + g.calculated_allocation, 0)
 
     const totalOverallAllocation = enhancedGoals
-      .filter((g: any) => g.frequency === 'overall' && g.is_active)
+      .filter((g: any) => g.frequency === 'overall' && g.is_active && !g.is_completed)
       .reduce((sum: number, g: any) => sum + g.calculated_allocation, 0)
 
-    // Calculate OVERALL progress across ALL goals (active AND paused)
+    // Calculate OVERALL progress across ALL goals (active, paused, and completed)
     // This ensures paused goals still show their saved progress
     const totalCurrentlySaved = enhancedGoals
       .reduce((sum: number, g: any) => sum + Number(g.current_amount || 0), 0)
@@ -99,20 +111,21 @@ export async function GET(request: Request) {
     console.log(`  - Total currently saved: $${totalCurrentlySaved}`)
     console.log(`  - Total target: $${totalTargetAmount}`)
     console.log(`  - Overall progress: ${overallProgressPercentage.toFixed(1)}%`)
-    console.log(`  - Active goals: ${enhancedGoals.filter((g: any) => g.is_active).length}`)
+    console.log(`  - Active goals: ${enhancedGoals.filter((g: any) => g.is_active && !g.is_completed).length}`)
+    console.log(`  - Completed goals: ${enhancedGoals.filter((g: any) => g.is_completed).length}`)
     console.log(`  - Total goals: ${enhancedGoals.length}`)
 
     return NextResponse.json({
       goals: enhancedGoals,
       summary: {
-        total_monthly_allocation: totalMonthlyAllocation,  // Only active
-        total_overall_allocation: totalOverallAllocation,  // Only active
-        total_allocation: totalMonthlyAllocation + totalOverallAllocation,  // Only active
+        total_monthly_allocation: totalMonthlyAllocation,  // Only active and incomplete
+        total_overall_allocation: totalOverallAllocation,  // Only active and incomplete
+        total_allocation: totalMonthlyAllocation + totalOverallAllocation,  // Only active and incomplete
         monthly_income: monthlyIncome,
-        active_goals: enhancedGoals.filter((g: any) => g.is_active).length,
+        active_goals: enhancedGoals.filter((g: any) => g.is_active && !g.is_completed).length,
         completed_goals: enhancedGoals.filter((g: any) => g.is_completed).length,
-        total_currently_saved: totalCurrentlySaved,  // ALL goals (active + paused)
-        total_target_amount: totalTargetAmount,  // ALL goals (active + paused)
+        total_currently_saved: totalCurrentlySaved,  // ALL goals (active + paused + completed)
+        total_target_amount: totalTargetAmount,  // ALL goals (active + paused + completed)
         overall_progress_percentage: Math.round(overallProgressPercentage * 10) / 10  // ALL goals
       }
     })

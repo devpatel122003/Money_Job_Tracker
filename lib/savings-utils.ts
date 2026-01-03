@@ -2,7 +2,13 @@ import { sql } from "@/lib/db"
 
 /**
  * Auto-contribute to savings goals when income is added
- * This function allocates income to active monthly savings goals automatically
+ * This function allocates income to ALL ACTIVE savings goals automatically
+ * 
+ * NEW LOGIC:
+ * - All active goals (both monthly and overall) receive contributions from income
+ * - Monthly goals: use their allocation_type (percentage or fixed)
+ * - Overall goals: receive contributions based on percentage if specified, or proportionally
+ * - Inactive goals (is_active=false) do NOT receive any contributions
  * 
  * @param userId - The user's ID
  * @param incomeAmount - The amount of income added
@@ -19,11 +25,12 @@ export async function autoContributeToSavings(
         console.log(`[AUTO-CONTRIBUTE] Income amount: $${incomeAmount}`)
         console.log(`[AUTO-CONTRIBUTE] Income date: ${incomeDate}`)
 
-        // Get active savings goals
+        // Get ALL active savings goals (both monthly and overall)
         const savingsGoals = await sql`
       SELECT * FROM savings_goals
       WHERE user_id = ${userId}
       AND is_active = TRUE
+      AND is_completed = FALSE
       ORDER BY priority DESC
     `
 
@@ -50,25 +57,54 @@ export async function autoContributeToSavings(
         for (const goal of savingsGoals) {
             let contributionAmount = 0
 
-            // Only auto-contribute to monthly goals
+            // Handle monthly frequency goals
             if (goal.frequency === 'monthly') {
                 if (goal.allocation_type === 'percentage') {
                     contributionAmount = (incomeAmount * Number(goal.allocation_value || 0)) / 100
-                    console.log(`[AUTO-CONTRIBUTE] ${goal.goal_name}: Percentage ${goal.allocation_value}% of $${incomeAmount} = $${contributionAmount}`)
+                    console.log(`[AUTO-CONTRIBUTE] ${goal.goal_name}: Monthly ${goal.allocation_value}% of $${incomeAmount} = $${contributionAmount}`)
                 } else if (goal.allocation_type === 'fixed') {
                     contributionAmount = Number(goal.allocation_value || 0)
-                    console.log(`[AUTO-CONTRIBUTE] ${goal.goal_name}: Fixed amount = $${contributionAmount}`)
+                    console.log(`[AUTO-CONTRIBUTE] ${goal.goal_name}: Fixed monthly amount = $${contributionAmount}`)
                 }
+            }
+            // Handle overall frequency goals - NEW LOGIC
+            else if (goal.frequency === 'overall') {
+                // For overall goals, contribute based on allocation if specified
+                if (goal.allocation_type === 'percentage' && goal.allocation_value) {
+                    contributionAmount = (incomeAmount * Number(goal.allocation_value || 0)) / 100
+                    console.log(`[AUTO-CONTRIBUTE] ${goal.goal_name}: Overall ${goal.allocation_value}% of $${incomeAmount} = $${contributionAmount}`)
+                } else if (goal.allocation_type === 'fixed' && goal.allocation_value) {
+                    contributionAmount = Number(goal.allocation_value || 0)
+                    console.log(`[AUTO-CONTRIBUTE] ${goal.goal_name}: Fixed overall amount = $${contributionAmount}`)
+                } else {
+                    // If no allocation specified, contribute proportionally based on remaining
+                    // This ensures overall goals still benefit from income
+                    const remaining = Number(goal.target_amount) - Number(goal.current_amount)
+                    if (remaining > 0) {
+                        // Default: allocate 5% of income to each overall goal without specific allocation
+                        contributionAmount = (incomeAmount * 5) / 100
+                        console.log(`[AUTO-CONTRIBUTE] ${goal.goal_name}: Default 5% of $${incomeAmount} = $${contributionAmount}`)
+                    }
+                }
+            }
 
-                if (contributionAmount > 0) {
+            // Only add contribution if amount is positive and doesn't exceed target
+            if (contributionAmount > 0) {
+                const remaining = Number(goal.target_amount) - Number(goal.current_amount)
+                // Cap contribution at remaining amount
+                const finalContribution = Math.min(contributionAmount, remaining)
+
+                if (finalContribution > 0) {
                     contributions.push({
                         goalId: goal.id,
                         goalName: goal.goal_name,
-                        amount: contributionAmount
+                        amount: finalContribution
                     })
+
+                    if (finalContribution < contributionAmount) {
+                        console.log(`[AUTO-CONTRIBUTE] ${goal.goal_name}: Capped contribution from $${contributionAmount} to $${finalContribution} (remaining: $${remaining})`)
+                    }
                 }
-            } else {
-                console.log(`[AUTO-CONTRIBUTE] ${goal.goal_name}: Skipping (frequency=${goal.frequency}, only monthly goals auto-contribute)`)
             }
         }
 
@@ -126,6 +162,7 @@ export async function calculateSavingsAllocation(
     SELECT * FROM savings_goals
     WHERE user_id = ${userId}
     AND is_active = TRUE
+    AND is_completed = FALSE
   `
 
     let monthlySavingsAllocation = 0
@@ -137,9 +174,17 @@ export async function calculateSavingsAllocation(
         } else if (goal.frequency === 'monthly' && goal.allocation_type === 'percentage') {
             monthlySavingsAllocation += (monthlyIncome * Number(goal.allocation_value || 0)) / 100
         } else if (goal.frequency === 'overall') {
-            const remaining = Number(goal.target_amount) - Number(goal.current_amount)
-            if (remaining > 0) {
-                overallSavingsAllocation += remaining
+            // For overall goals, calculate allocation based on their settings
+            if (goal.allocation_type === 'percentage' && goal.allocation_value) {
+                overallSavingsAllocation += (monthlyIncome * Number(goal.allocation_value || 0)) / 100
+            } else if (goal.allocation_type === 'fixed' && goal.allocation_value) {
+                overallSavingsAllocation += Number(goal.allocation_value || 0)
+            } else {
+                // Default 5% allocation if not specified
+                const remaining = Number(goal.target_amount) - Number(goal.current_amount)
+                if (remaining > 0) {
+                    overallSavingsAllocation += Math.min((monthlyIncome * 5) / 100, remaining)
+                }
             }
         }
     })
