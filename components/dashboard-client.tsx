@@ -80,7 +80,8 @@ export function DashboardClient({ user }: DashboardClientProps) {
     ).length,
     monthlyIncome: summary?.monthlyIncome || 0,
     monthlyExpenses: summary?.monthlyExpenses || 0,
-    balance: summary?.overallBalance || 0,
+    balance: summary?.availableBalance ?? summary?.totalBalance ?? 0,
+    savingsAllocation: summary?.totalSavingsAllocation || 0,
   }
 
   return (
@@ -146,14 +147,19 @@ export function DashboardClient({ user }: DashboardClientProps) {
             <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 md:p-6">
               <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1 sm:gap-2">
                 <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
-                Balance
+                Available Balance
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
               <div className={`text-2xl sm:text-3xl font-bold ${stats.balance >= 0 ? "text-purple-600" : "text-amber-600"}`}>
                 ${stats.balance.toFixed(2)}
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">All time</p>
+              <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">
+                {stats.savingsAllocation > 0
+                  ? `$${stats.savingsAllocation.toFixed(2)} to savings`
+                  : "After savings"
+                }
+              </p>
             </CardContent>
           </Card>
         </div>
