@@ -76,38 +76,37 @@ export async function GET(request: Request) {
     const totalAllExpenses = Number(overallExpensesResult[0]?.total || 0)
     const totalPlannedExpenses = Number(plannedExpensesResult[0]?.total || 0)
 
-    // Get all savings goals to calculate comprehensive progress
+    // Get ALL savings goals (both active and paused) for progress calculation
     const allSavingsGoals = await sql`
       SELECT * FROM savings_goals
       WHERE user_id = ${user.id}
     `
 
-    // Get active savings goals for allocation calculation
+    // Get ACTIVE savings goals for allocation calculation
     const activeSavingsGoals = allSavingsGoals.filter((goal: any) => goal.is_active)
 
     let monthlySavingsAllocation = 0
     let overallSavingsAllocation = 0
 
-    // Calculate total across ALL goals (for overall progress)
+    // Calculate total saved and target across ALL goals (active AND paused)
+    // This ensures paused goals still count toward overall progress
     let totalCurrentlySaved = 0
     let totalTargetAmount = 0
 
-    // Calculate for ALL goals regardless of active status
     allSavingsGoals.forEach((goal: any) => {
+      // Count ALL goals for progress (even paused ones)
       totalCurrentlySaved += Number(goal.current_amount || 0)
       totalTargetAmount += Number(goal.target_amount || 0)
     })
 
-    // Calculate allocations for ACTIVE goals only
+    // Calculate allocations ONLY for ACTIVE goals
     // This is what gets deducted from available balance
     activeSavingsGoals.forEach((goal: any) => {
       if (goal.frequency === 'monthly' && goal.allocation_type === 'fixed') {
         monthlySavingsAllocation += Number(goal.allocation_value || 0)
       } else if (goal.frequency === 'monthly' && goal.allocation_type === 'percentage') {
-        // Use monthly income for percentage calculation
         monthlySavingsAllocation += (monthlyIncome * Number(goal.allocation_value || 0)) / 100
       } else if (goal.frequency === 'overall') {
-        // For overall goals, deduct the remaining amount needed
         const remaining = Number(goal.target_amount) - Number(goal.current_amount)
         if (remaining > 0) {
           overallSavingsAllocation += remaining
@@ -131,18 +130,12 @@ export async function GET(request: Request) {
     // Calculate balances
     const totalBalance = totalAllIncome - totalAllExpenses
 
-    // Available balance = Total balance - allocated savings - planned expenses
-    // This represents money that is truly free to spend
-    // Allocated savings includes:
-    //   - Money already saved (current_amount in goals)
-    //   - Money earmarked for active goals (allocations that haven't been saved yet)
+    // Available balance = Total balance - ACTIVE allocations - planned expenses
+    // Note: We deduct allocations (future commitments) for ACTIVE goals only
+    // But saved amounts count from ALL goals (active + paused)
     const availableBalance = totalBalance - totalSavingsAllocation - totalPlannedExpenses
 
-    // Overall balance = Total income - Total expenses - Future planned expenses (ORIGINAL LOGIC)
-    // This is for dashboard and doesn't include savings
-    const overallBalance = totalAllIncome - totalAllExpenses - totalPlannedExpenses
-
-    // Calculate overall progress percentage
+    // Calculate overall progress percentage (includes ALL goals, even paused)
     const overallProgressPercentage = totalTargetAmount > 0
       ? Math.min((totalCurrentlySaved / totalTargetAmount) * 100, 100)
       : 0
@@ -152,14 +145,13 @@ export async function GET(request: Request) {
       monthlyExpenses,      // Expenses for selected month
       monthlyBalance: monthlyIncome - monthlyExpenses,  // Monthly balance
       totalBalance,         // Total income - total expenses (before any deductions)
-      totalSavingsAllocation,  // Total allocated to active savings goals (deducted from balance)
-      monthlySavingsAllocation,  // Monthly recurring savings
-      overallSavingsAllocation,  // Overall goal savings still needed
-      totalCurrentlySaved,  // Total amount saved across ALL goals
-      totalTargetAmount,    // Total target across ALL goals
-      overallProgressPercentage, // Overall progress across all goals
-      availableBalance,     // Free money after ALLOCATIONS and planned expenses
-      overallBalance,       // For dashboard: Income - Expenses - Planned (no savings)
+      totalSavingsAllocation,  // Total allocated to ACTIVE savings goals only
+      monthlySavingsAllocation,  // Monthly recurring savings (active only)
+      overallSavingsAllocation,  // Overall goal savings still needed (active only)
+      totalCurrentlySaved,  // Total saved across ALL goals (active + paused)
+      totalTargetAmount,    // Total target across ALL goals (active + paused)
+      overallProgressPercentage, // Overall progress across ALL goals (active + paused)
+      availableBalance,     // Free money after ACTIVE allocations and planned expenses
       totalPlannedExpenses, // Total future planned expenses
       categoryExpenses,
       activeSavingsGoals: activeSavingsGoals.length,
