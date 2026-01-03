@@ -474,10 +474,7 @@ export default function FinancePage() {
                     ${(summary?.availableBalance ?? summary?.totalBalance ?? 0).toFixed(2)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {summary?.totalSavingsAllocation > 0
-                      ? `$${summary.totalSavingsAllocation.toFixed(2)} to savings`
-                      : "After savings"
-                    }
+                    After savings and Planning
                   </p>
                 </CardContent>
               </Card>
