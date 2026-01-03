@@ -28,12 +28,13 @@ export async function GET(request: Request) {
       `
     }
 
-    // Get current month's income to calculate percentage-based allocations
+    // Get current month date range
     const now = new Date()
     const startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`
     const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
     const endDate = nextMonth.toISOString().split("T")[0]
 
+    // Get current month's income to calculate percentage-based allocations
     const incomeResult = await sql`
       SELECT COALESCE(SUM(amount), 0) as total
       FROM income
@@ -43,21 +44,59 @@ export async function GET(request: Request) {
     `
     const monthlyIncome = Number(incomeResult[0]?.total || 0)
 
+    // For each goal, calculate monthly contributions
+    // We'll need to track what was contributed this month
+    const goalsWithMonthlyContributions = await Promise.all(
+      goals.map(async (goal: any) => {
+        let monthlyContribution = 0
+
+        // Calculate how much was contributed to this goal in the current month
+        // by looking at income in this month and applying the goal's allocation
+        if (goal.is_active && !goal.is_completed && goal.frequency === 'monthly') {
+          // Get all income records for this month
+          const monthlyIncomeRecords = await sql`
+            SELECT amount, income_date
+            FROM income
+            WHERE user_id = ${user.id}
+            AND income_date >= ${startDate}
+            AND income_date < ${endDate}
+            ORDER BY income_date ASC
+          `
+
+          // Calculate contribution from each income based on goal's allocation settings
+          for (const incomeRecord of monthlyIncomeRecords) {
+            const incomeAmount = Number(incomeRecord.amount)
+            let contribution = 0
+
+            if (goal.allocation_type === 'percentage') {
+              contribution = (incomeAmount * Number(goal.allocation_value)) / 100
+            } else if (goal.allocation_type === 'fixed') {
+              contribution = Number(goal.allocation_value)
+            }
+
+            monthlyContribution += contribution
+          }
+        }
+
+        return {
+          ...goal,
+          monthly_contribution: monthlyContribution
+        }
+      })
+    )
+
     // Enhance each goal with calculated allocation amount
-    const enhancedGoals = goals.map((goal: any) => {
+    const enhancedGoals = goalsWithMonthlyContributions.map((goal: any) => {
       let calculatedAllocation = 0
 
       // Only calculate allocation for ACTIVE and INCOMPLETE goals
       if (goal.is_active && !goal.is_completed) {
         if (goal.frequency === 'monthly') {
-          // Monthly goals: use their specified allocation
-          if (goal.allocation_type === 'percentage') {
-            calculatedAllocation = (monthlyIncome * Number(goal.allocation_value)) / 100
-          } else if (goal.allocation_type === 'fixed') {
-            calculatedAllocation = Number(goal.allocation_value)
-          }
+          // For monthly goals: show the ACTUAL contribution made this month
+          // This is the "progress" for the current month
+          calculatedAllocation = goal.monthly_contribution || 0
         } else if (goal.frequency === 'overall') {
-          // Overall goals: NEW LOGIC - they also benefit from income
+          // For overall goals: show income-based allocation
           if (goal.allocation_type === 'percentage' && goal.allocation_value) {
             calculatedAllocation = (monthlyIncome * Number(goal.allocation_value)) / 100
           } else if (goal.allocation_type === 'fixed' && goal.allocation_value) {
@@ -78,10 +117,25 @@ export async function GET(request: Request) {
         ? Math.min((Number(goal.current_amount) / Number(goal.target_amount)) * 100, 100)
         : 0
 
+      // For monthly goals, also calculate monthly progress (this month's contribution vs monthly target)
+      let monthlyProgress = 0
+      if (goal.frequency === 'monthly' && goal.allocation_type === 'percentage') {
+        const monthlyTarget = (monthlyIncome * Number(goal.allocation_value)) / 100
+        monthlyProgress = monthlyTarget > 0
+          ? Math.min((goal.monthly_contribution / monthlyTarget) * 100, 100)
+          : 0
+      } else if (goal.frequency === 'monthly' && goal.allocation_type === 'fixed') {
+        const monthlyTarget = Number(goal.allocation_value)
+        monthlyProgress = monthlyTarget > 0
+          ? Math.min((goal.monthly_contribution / monthlyTarget) * 100, 100)
+          : 0
+      }
+
       return {
         ...goal,
-        calculated_allocation: calculatedAllocation,  // 0 if paused or completed
-        progress: Math.round(progress * 10) / 10,  // Based on current_amount (works when paused)
+        calculated_allocation: calculatedAllocation,  // For monthly: actual contribution this month; for overall: allocation amount
+        progress: Math.round(progress * 10) / 10,  // Overall progress toward target
+        monthly_progress: Math.round(monthlyProgress * 10) / 10,  // This month's progress (for monthly goals)
         remaining: Math.max(Number(goal.target_amount) - Number(goal.current_amount), 0)
       }
     })
@@ -118,9 +172,9 @@ export async function GET(request: Request) {
     return NextResponse.json({
       goals: enhancedGoals,
       summary: {
-        total_monthly_allocation: totalMonthlyAllocation,  // Only active and incomplete
-        total_overall_allocation: totalOverallAllocation,  // Only active and incomplete
-        total_allocation: totalMonthlyAllocation + totalOverallAllocation,  // Only active and incomplete
+        total_monthly_allocation: totalMonthlyAllocation,  // Actual contributions this month for monthly goals
+        total_overall_allocation: totalOverallAllocation,  // Expected allocation for overall goals
+        total_allocation: totalMonthlyAllocation + totalOverallAllocation,
         monthly_income: monthlyIncome,
         active_goals: enhancedGoals.filter((g: any) => g.is_active && !g.is_completed).length,
         completed_goals: enhancedGoals.filter((g: any) => g.is_completed).length,

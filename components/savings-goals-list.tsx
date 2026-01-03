@@ -175,20 +175,16 @@ export function SavingsGoalsList({ goals, onEdit, onRefresh }: SavingsGoalsListP
                             <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <div className={`w-3 h-3 rounded-full ${getColorClass(goal.color)}`} />
+                                        <div className={`h-3 w-3 rounded-full ${getColorClass(goal.color)}`} />
                                         <CardTitle className="text-lg">{goal.goal_name}</CardTitle>
                                     </div>
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                        <Badge variant={goal.frequency === "monthly" ? "default" : "secondary"}>
-                                            {goal.frequency === "monthly" ? "Monthly" : "Overall"}
+                                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                                        <Badge variant="outline">
+                                            {goal.frequency === "monthly" ? "Monthly" : "Overall Goal"}
                                         </Badge>
-                                        {goal.is_active ? (
-                                            <Badge variant="outline" className="border-green-500 text-green-700">
-                                                Active
-                                            </Badge>
-                                        ) : (
-                                            <Badge variant="outline" className="border-gray-500 text-gray-700">
-                                                Paused
+                                        {!goal.is_active && (
+                                            <Badge variant="outline" className="border-orange-500 text-orange-700">
+                                                ⏸ Paused
                                             </Badge>
                                         )}
                                         {goal.is_completed && (
@@ -244,10 +240,10 @@ export function SavingsGoalsList({ goals, onEdit, onRefresh }: SavingsGoalsListP
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {/* Progress */}
+                            {/* Overall Progress */}
                             <div>
                                 <div className="flex justify-between text-sm mb-2">
-                                    <span className="text-muted-foreground">Progress</span>
+                                    <span className="text-muted-foreground">Overall Progress</span>
                                     <span className="font-medium">{goal.progress}%</span>
                                 </div>
                                 <Progress value={goal.progress} className="h-2" />
@@ -257,18 +253,51 @@ export function SavingsGoalsList({ goals, onEdit, onRefresh }: SavingsGoalsListP
                                 </div>
                             </div>
 
-                            {/* Allocation Info */}
+                            {/* Monthly Progress - Only for monthly goals */}
                             {goal.frequency === "monthly" && goal.is_active && (
                                 <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <TrendingUp className="h-4 w-4 text-blue-600" />
-                                        <span className="text-sm font-medium text-blue-900">Monthly Allocation</span>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <TrendingUp className="h-4 w-4 text-blue-600" />
+                                            <span className="text-sm font-medium text-blue-900">This Month</span>
+                                        </div>
+                                        {goal.monthly_progress !== undefined && (
+                                            <span className="text-sm font-bold text-blue-600">
+                                                {goal.monthly_progress}%
+                                            </span>
+                                        )}
                                     </div>
                                     <p className="text-lg font-bold text-blue-600">
                                         ${goal.calculated_allocation?.toFixed(2) || "0.00"}
                                         {goal.allocation_type === "percentage" && (
                                             <span className="text-sm font-normal text-blue-700 ml-1">
-                                                ({goal.allocation_value}%)
+                                                of {goal.allocation_value}% target
+                                            </span>
+                                        )}
+                                        {goal.allocation_type === "fixed" && (
+                                            <span className="text-sm font-normal text-blue-700 ml-1">
+                                                of ${Number(goal.allocation_value).toFixed(2)} target
+                                            </span>
+                                        )}
+                                    </p>
+                                    {goal.monthly_progress !== undefined && (
+                                        <Progress value={goal.monthly_progress} className="h-1.5 mt-2" />
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Overall Goals Allocation Info */}
+                            {goal.frequency === "overall" && goal.is_active && goal.calculated_allocation > 0 && (
+                                <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <TrendingUp className="h-4 w-4 text-green-600" />
+                                        <span className="text-sm font-medium text-green-900">Expected Allocation</span>
+                                    </div>
+                                    <p className="text-lg font-bold text-green-600">
+                                        ${goal.calculated_allocation?.toFixed(2) || "0.00"}
+                                        {goal.allocation_type === "percentage" && goal.allocation_value && (
+                                            <span className="text-sm font-normal text-green-700 ml-1">
+                                                ({goal.allocation_value}% per income)
                                             </span>
                                         )}
                                     </p>
