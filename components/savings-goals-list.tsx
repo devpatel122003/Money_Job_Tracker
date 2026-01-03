@@ -152,19 +152,8 @@ export function SavingsGoalsList({ goals, onEdit, onRefresh }: SavingsGoalsListP
         return colors[color] || colors.blue
     }
 
-    if (goals.length === 0) {
-        return (
-            <Card>
-                <CardContent className="py-12 text-center">
-                    <TargetIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-lg font-medium mb-2">No savings goals yet</p>
-                    <p className="text-sm text-muted-foreground mb-4">
-                        Create your first savings goal to start building your financial future
-                    </p>
-                </CardContent>
-            </Card>
-        )
-    }
+    // REMOVED: Empty state - let parent component handle it
+    // This prevents duplicate empty states
 
     return (
         <>
