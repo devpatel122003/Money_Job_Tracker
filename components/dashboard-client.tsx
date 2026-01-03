@@ -155,10 +155,7 @@ export function DashboardClient({ user }: DashboardClientProps) {
                 ${stats.balance.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">
-                {stats.savingsAllocation > 0
-                  ? `$${stats.savingsAllocation.toFixed(2)} to savings`
-                  : "After savings"
-                }
+                After savings and Planning
               </p>
             </CardContent>
           </Card>
