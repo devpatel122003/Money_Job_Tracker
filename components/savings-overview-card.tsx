@@ -2,9 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Button } from "@/components/ui/button"
-import { PiggyBank, TrendingUp, Target, Eye, EyeOff } from "lucide-react"
-import { useState } from "react"
+import { TrendingUp, Target } from "lucide-react"
 
 interface SavingsOverviewCardProps {
     summary: {
@@ -21,7 +19,7 @@ interface SavingsOverviewCardProps {
     totalBalance: number
     availableBalance: number
     goals: any[]
-    onManageClick: () => void
+    onManageClick?: () => void
 }
 
 export function SavingsOverviewCard({
@@ -31,8 +29,6 @@ export function SavingsOverviewCard({
     goals,
     onManageClick,
 }: SavingsOverviewCardProps) {
-    const [showDetails, setShowDetails] = useState(false)
-
     const savingsPercentage = summary.monthly_income > 0
         ? ((summary.total_monthly_allocation / summary.monthly_income) * 100).toFixed(1)
         : "0"
@@ -53,108 +49,82 @@ export function SavingsOverviewCard({
     )
 
     return (
-        <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white">
-            <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                        <PiggyBank className="h-5 w-5 text-blue-600" />
-                        Savings Overview
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Total Allocated */}
+            <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-200">
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Total Allocated
                     </CardTitle>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowDetails(!showDetails)}
-                        className="h-8 w-8 p-0"
-                    >
-                        {showDetails ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                {/* Main Stats */}
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white p-3 rounded-lg border border-blue-100">
-                        <p className="text-xs text-muted-foreground mb-1">Total Allocated</p>
-                        <p className="text-xl font-bold text-blue-600">
-                            ${summary.total_allocation.toFixed(2)}
-                        </p>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-3xl font-bold text-blue-600">
+                        ${summary.total_allocation.toFixed(2)}
                     </div>
-                    <div className="bg-white p-3 rounded-lg border border-green-100">
-                        <p className="text-xs text-muted-foreground mb-1">Available Balance</p>
-                        <p className="text-xl font-bold text-green-600">
-                            ${availableBalance.toFixed(2)}
-                        </p>
-                    </div>
-                </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        {summary.active_goals} active goal{summary.active_goals !== 1 ? 's' : ''}
+                    </p>
+                </CardContent>
+            </Card>
 
-                {/* Savings Rate */}
-                {summary.monthly_income > 0 && summary.total_monthly_allocation > 0 && (
-                    <div className="bg-white p-3 rounded-lg border border-purple-100">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                                <TrendingUp className="h-4 w-4 text-purple-600" />
-                                <span className="text-sm font-medium">Savings Rate</span>
-                            </div>
-                            <span className="text-sm font-bold text-purple-600">{savingsPercentage}%</span>
+            {/* Available Balance */}
+            <Card className="bg-gradient-to-br from-green-50 to-white border-green-200">
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Available Balance
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className={`text-3xl font-bold ${availableBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        ${availableBalance.toFixed(2)}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        After savings & planned
+                    </p>
+                </CardContent>
+            </Card>
+
+            {/* Savings Rate */}
+            {summary.monthly_income > 0 && summary.total_monthly_allocation > 0 && (
+                <Card className="bg-gradient-to-br from-purple-50 to-white border-purple-200">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4 text-purple-600" />
+                            Savings Rate
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-3xl font-bold text-purple-600">
+                            {savingsPercentage}%
                         </div>
-                        <Progress value={parseFloat(savingsPercentage)} className="h-2" />
                         <p className="text-xs text-muted-foreground mt-1">
-                            ${summary.total_monthly_allocation.toFixed(2)} of ${summary.monthly_income.toFixed(2)} monthly income
+                            ${summary.total_monthly_allocation.toFixed(2)} monthly
                         </p>
-                    </div>
-                )}
+                        <Progress value={parseFloat(savingsPercentage)} className="h-2 mt-2" />
+                    </CardContent>
+                </Card>
+            )}
 
-                {/* Overall Progress */}
-                {totalSavingsTarget > 0 && (
-                    <div className="bg-white p-3 rounded-lg border border-orange-100">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                                <Target className="h-4 w-4 text-orange-600" />
-                                <span className="text-sm font-medium">Overall Progress</span>
-                            </div>
-                            <span className="text-sm font-bold text-orange-600">{overallProgress.toFixed(1)}%</span>
+            {/* Overall Progress */}
+            {totalSavingsTarget > 0 && (
+                <Card className="bg-gradient-to-br from-orange-50 to-white border-orange-200">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                            <Target className="h-4 w-4 text-orange-600" />
+                            Overall Progress
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-3xl font-bold text-orange-600">
+                            {overallProgress.toFixed(1)}%
                         </div>
-                        <Progress value={overallProgress} className="h-2" />
                         <p className="text-xs text-muted-foreground mt-1">
-                            ${totalSavingsProgress.toFixed(2)} of ${totalSavingsTarget.toFixed(2)} total saved
+                            ${totalSavingsProgress.toFixed(2)} of ${totalSavingsTarget.toFixed(2)}
                         </p>
-                    </div>
-                )}
-
-                {/* Details */}
-                {showDetails && (
-                    <div className="space-y-2 pt-2 border-t">
-                        <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Monthly Allocation:</span>
-                            <span className="font-medium">${summary.total_monthly_allocation.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Overall Goals Remaining:</span>
-                            <span className="font-medium">${summary.total_overall_allocation.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Total Saved:</span>
-                            <span className="font-medium text-green-600">${totalSavingsProgress.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Active Goals:</span>
-                            <span className="font-medium">{summary.active_goals}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Completed Goals:</span>
-                            <span className="font-medium text-green-600">{summary.completed_goals}</span>
-                        </div>
-                    </div>
-                )}
-
-                {/* Action Button */}
-                <Button
-                    onClick={onManageClick}
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                >
-                    Manage Savings Goals
-                </Button>
-            </CardContent>
-        </Card>
+                        <Progress value={overallProgress} className="h-2 mt-2" />
+                    </CardContent>
+                </Card>
+            )}
+        </div>
     )
 }

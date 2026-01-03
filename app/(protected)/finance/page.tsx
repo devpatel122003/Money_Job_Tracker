@@ -491,13 +491,24 @@ export default function FinancePage() {
 
             {/* Savings Overview */}
             {savingsSummary && savingsSummary.active_goals > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Savings Summary</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentView("savings")}
+                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  >
+                    View All
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
                 <SavingsOverviewCard
                   summary={savingsSummary}
                   totalBalance={summary?.totalBalance || 0}
                   availableBalance={summary?.availableBalance || 0}
                   goals={savingsGoals}
-                  onManageClick={() => setCurrentView("savings")}
                 />
               </div>
             )}
@@ -837,25 +848,19 @@ export default function FinancePage() {
               </Button>
             </div>
 
-            {/* Savings Overview Card */}
+            {/* Savings Stats Cards - Compact Grid */}
             {savingsSummary && (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                <SavingsOverviewCard
-                  summary={savingsSummary}
-                  totalBalance={summary?.totalBalance || 0}
-                  availableBalance={summary?.availableBalance || 0}
-                  goals={savingsGoals}
-                  onManageClick={() => {
-                    // Scroll to goals list
-                    const element = document.getElementById('savings-goals-list')
-                    element?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                  }}
-                />
-              </div>
+              <SavingsOverviewCard
+                summary={savingsSummary}
+                totalBalance={summary?.totalBalance || 0}
+                availableBalance={summary?.availableBalance || 0}
+                goals={savingsGoals}
+              />
             )}
 
             {/* Savings Goals List */}
-            <div id="savings-goals-list">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Your Goals</h3>
               <SavingsGoalsList
                 goals={savingsGoals}
                 onEdit={(goal) => {
